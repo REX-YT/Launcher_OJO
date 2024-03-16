@@ -1,3 +1,3 @@
 #OJOLAND
 
-Sistema de actualizacionesº1
+Sistema de actualizaciones
