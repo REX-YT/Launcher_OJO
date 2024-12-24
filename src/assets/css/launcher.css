@@ -89,7 +89,8 @@ input::-webkit-inner-spin-button {
 
 .icon-minimize:hover,
 .icon-restore-down:hover,
-.icon-maximize:hover {
+.icon-maximize:hover,
+.icon-speaker:hover {
     background-color: #0000009d;
 }
 
@@ -107,9 +108,13 @@ input::-webkit-inner-spin-button {
 .popup-tab {
     width: 40%;
     padding: 15px;
-    background: var(--background);
-    border-radius: 15px;
     z-index: 10;
+    background-color: var(--sidebar);
+    border-right: 1px solid var(--sidebar-border);
+    transition: all 0.2s;
+    background: rgba( 0, 0, 0, 1 );
+    border-radius: 10px;
+    border: 1px solid rgba( 255, 255, 255, 0.18 );
 }
 
 .popup-title {
@@ -122,31 +127,383 @@ input::-webkit-inner-spin-button {
 .popup-options {
     display: none;
     align-items: end;
-    flex-direction: column;
+    flex-direction: row-reverse;
+    gap: 15px;
 }
 
 .popup-button {
-    background: none;
-    color: var(--color);
-    border: solid 4px var(--element-color);
-    border-radius: 10px;
-    padding: 0.3rem 4rem;
-    font-size: inherit;
-    font-weight: bold;
-    margin: 15px 10px;
+  font-size: 1rem;
+  font-weight: 600; /* Peso equilibrado */
+  padding: 0.5rem 2rem; /* Espaciado interno más sencillo */
+  margin: 0.5rem 0; /* Espaciado uniforme */
+  text-align: center;
+  background-color: var(--box-button); /* Color principal */
+  border: none; /* Eliminamos bordes innecesarios */
+  border-radius: 20px; /* Bordes más suaves */
+  color: #fff;
+  cursor: pointer;
+  z-index: 2;
+  transition: background-color 0.3s ease, transform 0.2s ease; /* Transición más simple */
+}
+
+.popup-button:hover {
+  background-color: var(--box-button-hover); /* Color más oscuro al pasar el cursor */
+  transform: scale(1.05); /* Pequeña ampliación para efecto interactivo */
 }
 
 .panel {
     position: absolute;
     width: 100%;
     height: 100%;
+    max-height: 0;
     opacity: 0;
+    overflow: hidden;
     z-index: 0;
     pointer-events: none;
+    transition: max-height 0.2s ease-in-out, opacity 0.2s ease-in-out;
+    transition-delay: 0s, 0.2s; /* Add this line */
 }
 
 .active {
     opacity: 1;
+    max-height: 100vh;
     z-index: 1;
     pointer-events: all;
+    transition-delay: 0.2s, 0s; /* Add this line */
 }
+
+.background-video {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: -1;
+    transition: opacity 1s; /* adjust the duration as needed */
+}
+
+.background-video.next {
+    opacity: 0;
+}
+
+.log-bg {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    background-color: var(--sidebar);
+    background: rgba( 0, 0, 0, 0.05 );
+    transition: background-color 0.2s, opacity 0.2s;
+    backdrop-filter: blur( 5px );
+    -webkit-backdrop-filter: blur( 5px );
+    pointer-events: none;
+    user-select: none;
+    opacity: 0;
+    overflow-x: hidden;
+  }
+
+  *::-webkit-scrollbar {
+    display:none;
+  }
+  
+  .log-bg.show {
+    pointer-events: all;
+    user-select: text;
+    opacity: 1;
+    z-index: 7;
+  }
+  
+  .log {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 60%;
+    height: 75%;
+    background-color: var(--sidebar);
+    background: rgba( 0, 0, 0, 0.9 );
+    border: 1px solid rgba( 255, 255, 255, 0.18 );
+    transition: background-color 0.2s, opacity 0.2s;
+    padding: 20px;
+    border-radius: 10px;
+    overflow-x: hidden;
+  }
+  
+  .log .log-close {
+    position: absolute;
+    top: 18px;
+    right: 18px;
+    width: 30px;
+    height: 30px;
+    border-radius: 15px;
+    color: var(--text);
+    background-color: #00000000;
+    transition: color 0.2s, background-color 0.2s;
+    cursor: pointer;
+    z-index: 8;
+  }
+  
+  .log .log-close:hover {
+    background-color: var(--frame);
+  }
+  
+  .log .log-close:before {
+    position: relative;
+    top: 7.5px;
+    left: 7.5px;
+    width: 15px;
+    height: 15px;
+    font-size: 15px;
+  }
+  
+  .log .log-content {
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+  }
+  
+  .log .log-content .titlev {
+    position: relative;
+    font: normal normal bold 20px/30px Poppins;
+    color: var(--text);
+    transition: color 0.2s;
+  }
+  
+  .log .log-content .logger {
+    position: relative;
+    margin-top: 12px;
+    width: 100%;
+    border-radius: 10px;
+    background-color: var(--box);
+    overflow-x: hidden;
+    word-wrap: break-word;
+  }
+  
+  .log .log-content .logger .header {
+    position: relative;
+    top: 0px;
+    left: 0px;
+    height: 70px;
+    width: 100%;
+    cursor: pointer;
+  }
+  
+  .log .log-content .logger .header .icon {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    width: 30px;
+    height: 30px;
+    color: var(--text);
+    transition: color 0.2s;
+    pointer-events: none;
+  }
+  
+  .log .log-content .logger .header .icon:before {
+    width: 30px;
+    height: 30px;
+    font-size: 30px;
+  }
+  
+  .log .log-content .logger .header .type {
+    position: absolute;
+    top: 22px;
+    left: 70px;
+    font: normal normal bold 16px/26px Poppins;
+    color: var(--text);
+    transition: color 0.2s;
+    pointer-events: none;
+  }
+  
+  .log .log-content .logger .header .expand {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    width: 40px;
+    height: 40px;
+    transform: rotate(180deg);
+    color: var(--icon-unselected);
+    transition: color 0.2s, transform 0.2s;
+    pointer-events: none;
+  }
+  
+  .log .log-content .logger .header .expand:before {
+    width: 40px;
+    height: 40px;
+    font-size: 40px;
+  }
+  
+  .log .log-content .logger .content {
+    position: relative;
+    top: -8px;
+    padding: 0 20px 0 20px;
+    width: 100%;
+    transition: height 0.2s, top 0.2s;
+    pointer-events: none;
+    z-index: 0;
+    font: normal normal normal 16px/25px Consolas;
+    transition: color 0.2s, line-height 0.2s, opacity 0.2s;
+    line-height: 0px;
+    opacity: 0;
+    user-select: text;
+  }
+  
+  .log .log-content .logger .content .info {
+    color: var(--text);
+  }
+  
+  .log .log-content .logger .content .warn {
+    color: #f46800;
+  }
+  
+  .log .log-content .logger .content .debug {
+    color: #3dacee;
+  }
+  
+  .log .log-content .logger .content .error {
+    color: #a30000;
+  }
+  
+  .log .log-content .logger.open .header .expand {
+    transform: rotate(0deg);
+  }
+  
+  .log .log-content .logger.open .content {
+    top: 0px;
+    padding: 0 20px 20px 20px;
+    pointer-events: all;
+    z-index: 1;
+    line-height: 1.6em;
+    opacity: 1;
+  }
+
+/* Estilos para el modal de términos y condiciones */
+.terms-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 99%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  padding: 10px; /* Añade espaciado alrededor del modal */
+}
+
+.terms-header {
+  text-align: center;
+  color: #fff;
+  margin-bottom: 20px;
+}
+
+.terms-header h2 {
+  font-size: 1.8rem;
+  margin: 0;
+  margin-bottom: 10px; /* Espaciado adicional debajo del título */
+}
+
+.terms-header p {
+  font-size: 1rem;
+  margin: 10px 0;
+}
+
+.terms-container {
+  width: 90%; /* Aumenta el ancho del contenedor */
+  max-width: 900px; /* Aumenta el máximo ancho */
+  height: 60%;
+  max-height: 70%;
+  background-color: var(--box);
+  border-radius: 10px;
+  padding: 20px;
+  overflow-y: auto; /* Barra de desplazamiento vertical */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  margin-bottom: 20px;
+}
+
+.terms-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 20px; /* Espaciado entre botones */
+  margin-top: 20px; /* Espaciado adicional arriba de los botones */
+}
+
+.accept-terms-btn, .decline-terms-btn {
+  padding: 10px 20px;
+  font-size: 16px;
+  border: none;
+  border-radius: 20px; /* Botones redondeados */
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.accept-terms-btn {
+  background: linear-gradient(45deg, #00FF00, #008000); /* Verde */
+  color: #fff;
+}
+
+.accept-terms-btn:disabled {
+  background: var(--box-button-hover);
+  cursor: not-allowed;
+}
+
+.accept-terms-btn:hover:not(:disabled) {
+  background: #004d00;
+}
+
+.decline-terms-btn {
+  background: linear-gradient(45deg, #FF0000, #8B0000); /* Rojo */
+  color: #fff;
+}
+
+.decline-terms-btn:hover {
+  background: #660000;
+}
+
+/* Contenedor del tooltip */
+.tooltip-container {
+  position: relative;
+  display: inline-block;
+}
+
+/* Tooltip */
+.tooltip-text {
+  visibility: hidden;
+  width: 220px;
+  background-color: #333;
+  color: #fff;
+  text-align: center;
+  border-radius: 5px;
+  padding: 5px 0;
+  position: absolute;
+  z-index: 1;
+  bottom: 125%; /* Posición del tooltip */
+  left: 50%;
+  margin-left: -110px; /* Centrando el tooltip */
+  opacity: 0;
+  transition: opacity 0.3s;
+  font-size: 14px;
+}
+
+/* Mostrar tooltip cuando el botón está deshabilitado y el mouse está sobre el contenedor */
+.tooltip-container:hover .tooltip-text,
+.tooltip-container button:disabled:hover + .tooltip-text {
+  visibility: visible;
+  opacity: 1;
+}
+
+/* Tooltip para el botón habilitado */
+.tooltip-container button:enabled + .tooltip-text {
+  visibility: hidden;
+  opacity: 0;
+}
+
+
+

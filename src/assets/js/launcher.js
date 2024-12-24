@@ -8,7 +8,17 @@ import Home from './panels/home.js';
 import Settings from './panels/settings.js';
 
 // import modules
-import { logger, config, changePanel, database, popup, setBackground, accountSelect, addAccount, pkg } from './utils.js';
+import { logger, config, changePanel, database, popup,
+    setBackground, 
+    accountSelect, 
+    addAccount, 
+    pkg , 
+    setUsername,
+    getUsername,
+    setDiscordUsername,
+    getDiscordUsername,
+    setBackgroundMusic,
+    setDiscordPFP, } from './utils.js';
 const { AZauth, Microsoft, Mojang } = require('minecraft-java-core');
 
 // libs
@@ -27,7 +37,8 @@ class Launcher {
         this.db = new database();
         await this.initConfigClient();
         this.createPanels(Login, Home, Settings);
-        this.startLauncher();
+        setBackgroundMusic();
+        await this.verifyDiscordAccount();
     }
 
     initLog() {
@@ -91,6 +102,8 @@ class Launcher {
             await this.db.createData('configClient', {
                 account_selected: null,
                 instance_selct: null,
+                discord_token: null,
+                music_muted: false,
                 java_config: {
                     java_path: null,
                     java_memory: {
@@ -108,7 +121,8 @@ class Launcher {
                     download_multi: 5,
                     theme: 'auto',
                     closeLauncher: 'close-launcher',
-                    intelEnabledMac: true
+                    intelEnabledMac: true,
+                    music_muted: false
                 }
             })
         }
@@ -125,6 +139,219 @@ class Launcher {
             new panel().init(this.config);
         }
     }
+
+    async verifyDiscordAccount() {
+        let configClient = await this.db.readData("configClient");
+        let token;
+        let isMember;
+        let isTokenValid;
+    
+        try {
+          console.log("Verificando token de discord...");
+          isTokenValid = await this.checkTokenValidity();
+        } catch (error) {
+          let discorderrdialog = new popup();
+    
+          let dialogResult = await new Promise((resolve) => {
+            discorderrdialog.openDialog({
+              title: "Error de autenticación",
+              content:
+                "No se ha podido verificar la sesión de Discord. <br><br>Quieres volver a intentarlo?",
+              options: true,
+              callback: resolve,
+            });
+          });
+    
+          if (dialogResult === "cancel") {
+            configClient.discord_token = null;
+            await this.db.updateData("configClient", configClient);
+            await this.verifyDiscordAccount();
+            return;
+          } else {
+            await this.verifyDiscordAccount();
+            return;
+          }
+        }
+    
+        if (!isTokenValid) {
+          let discorderrdialog = new popup();
+          console.error("Token de discord no válido");
+          let dialogResult = await new Promise((resolve) => {
+            discorderrdialog.openDialog({
+              title: "Verificación de Discord",
+              content:
+                "Para poder acceder al launcher debes iniciar sesión con tu cuenta de Discord y estar en el discord<br>Quieres iniciar sesión ahora?",
+              options: true,
+              callback: resolve,
+            });
+          });
+    
+          if (dialogResult === "cancel") {
+            let connectingPopup = new popup();
+
+            connectingPopup.openPopup({
+                title: 'Lanzador de OJOLAND',
+                content: 'Cerrando el lanzador...',
+                color: 'var(--color)'
+            });
+                      ipcRenderer.send('main-window-close');
+          } else {
+            let retry = true;
+    
+            while (retry) {
+              let connectingPopup = new popup();
+              try {
+                connectingPopup.openPopup({
+                  title: 'Verificación de Discord',
+                  content: 'Esperando a la autorización...',
+                  color: 'var(--color)'
+              });
+                token = await ipcRenderer.invoke("open-discord-auth");
+                connectingPopup.closePopup();
+                retry = false;
+              } catch (error) {
+                connectingPopup.closePopup();
+                console.error("Error al obtener el token de Discord");
+                let discorderrdialog = new popup();
+    
+                let dialogResult = await new Promise((resolve) => {
+                  discorderrdialog.openDialog({
+                    title: "Error al verificar la cuenta de Discord",
+                    content:
+                      "No se ha podido verificar la cuenta de Discord. <br><br>Quieres intentarlo de nuevo?",
+                    options: true,
+                    callback: resolve,
+                  });
+                });
+    
+                if (dialogResult === "cancel") {
+                    let connectingPopup = new popup();
+
+                    connectingPopup.openPopup({
+                        title: 'Lanzador de OJOLAND',
+                        content: 'Cerrando el lanzador...',
+                        color: 'var(--color)'
+                    });
+                    ipcRenderer.send('main-window-close');
+                  retry = false;
+                }
+              }
+            }
+    
+            if (token) {
+              configClient.discord_token = token;
+              await this.db.updateData("configClient", configClient);
+            }
+          }
+        } else {
+          token = configClient.discord_token;
+        }
+        let verifypopup = new popup();
+        verifypopup.openPopup({
+          title: "Verificando cuenta de Discord...",
+          content: "Por favor, espera un momento...",
+          color: "var(--color)",
+          background: false,
+        });
+        isMember = (await this.isUserInGuild(token, pkg.discord_server_id))
+          .isInGuild;
+          verifypopup.closePopup();
+        if (!isMember) {
+          let discorderrdialog = new popup();
+    
+          let dialogResult = await new Promise((resolve) => {
+            discorderrdialog.openDialog({
+              title: "Error al verificar la cuenta de Discord",
+              content:
+                "No se ha detectado que seas miembro del servidor de Discord. Para poder utilizar el launcher debes ser miembro del servidor. <br><br>Quieres unirte ahora? Se abrirá una ventana en tu navegador.",
+              options: true,
+              callback: resolve,
+            });
+          });
+    
+          if (dialogResult === "cancel") {
+            configClient.discord_token = null;
+            await this.db.updateData("configClient", configClient);
+            await this.verifyDiscordAccount();
+            return;
+          } else {
+            ipcRenderer.send("open-discord-url");
+            configClient.discord_token = null;
+            await this.db.updateData("configClient", configClient);
+            await this.verifyDiscordAccount();
+            return;
+          }
+        } else {
+          await this.startLauncher();
+        }
+      }
+    
+      async checkTokenValidity() {
+        let configClient = await this.db.readData("configClient");
+        let token = configClient.discord_token;
+        if (!token || token == "" || token == null) return false;
+        try {
+          const response = await fetch("https://discord.com/api/users/@me", {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+    
+          if (response.ok) {
+            return true;
+          } else {
+            return false;
+          }
+        } catch (error) {
+          return false;
+        }
+      }
+    
+      async isUserInGuild(accessToken, guildId) {
+        let username;
+        let userpfp;
+        try {
+          const response = await fetch("https://discord.com/api/users/@me/guilds", {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
+          });
+    
+          if (!response.ok) {
+            throw new Error("Failed to fetch guilds");
+          }
+          const userResponse = await fetch("https://discord.com/api/users/@me", {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
+          });
+          username = "Desconocido";
+          userpfp = "https://cdn.discordapp.com/embed/avatars/0.png?size=1024";
+          if (!userResponse.ok) {
+            throw new Error("Failed to fetch user info");
+          } else {
+            const user = await userResponse.json();
+            username = user.username;
+            //si user.avatar es null, se pone el avatar por defecto
+            if (user.avatar === null) {
+              userpfp = "https://cdn.discordapp.com/embed/avatars/0.png?size=1024";
+            } else {
+            userpfp = `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}?size=1024`;
+            }
+          }
+          setDiscordPFP(userpfp);
+          setDiscordUsername(username);
+    
+          const guilds = await response.json();
+    
+          const isInGuild = guilds.some((guild) => guild.id === guildId);
+ 
+          return { isInGuild };
+        } catch (error) {
+          console.error("Error al verificar la pertenencia al servidor:", error);
+          return { isInGuild: false, error: error.message };
+        }
+      }
 
     async startLauncher() {
         let accounts = await this.db.readAllData('accounts')

@@ -1,7 +1,7 @@
 {
     "name": "OJOLAND-Launcher",
     "preductname": "OJOLAND Launcher",
-    "version": "2.0.3",
+    "version": "3.0.1",
     "description": "Lanzador oficial de OJOLAND",
     "main": "src/app.js",
     "author": {
@@ -10,22 +10,26 @@
         "url": "https://github.com/REX-YT"
     },
     "url": "http://api.comunidadojo.xyz/api-OJOLAND",
+    "discord_server_id": "739664769014956134",
+    "discord_url": "https://discord.comunidadojo.xyz",
     "scripts": {
         "start": "cross-env-shell NODE_ENV=dev electron .",
         "dev": "cross-env-shell DEV_TOOL=open nodemon --exec npm start",
         "build": "node build.js --obf=false --build=platform",
         "icon": "node build.js --icon=https://raw.githubusercontent.com/luuxis/Selvania-Launcher/master/src/assets/images/icon.png"
     },
-    "license": "CCANC",
+    "license": "Propietary",
     "nodemonConfig": {
         "ext": "js,html,css",
         "ignore": "**/test"
     },
     "dependencies": {
         "electron-updater": "^6.1.4",
+        "express": "^4.21.2",
         "minecraft-java-core": "^3.8.1",
         "node-bdd": "^2.0.3",
         "node-fetch": "^2.7.0",
+        "url": "^0.11.4",
         "xml-js": "^1.6.11"
     },
     "devDependencies": {

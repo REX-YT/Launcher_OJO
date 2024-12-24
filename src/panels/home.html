@@ -1,46 +1,76 @@
 <div class="container">
-    <div class="status-server">
-        <img class="server-status-icon" src="assets/images/icon.png">
-        <div class="server-status-infos">
-            <div class="server-status-name">Minecraft</div>
-            <div class="server-status-text">estado - 0 ms</div>
+    <div class="topbar">
+        <div class="message-container">
+            <img  class="message-icon" src="assets/images/default/setve.png">
+            <div class="message-text">
+                <div class="message-title">Notificación</div>
+                <div class="message-content">Esto no deberías de estar viendolo</div> 
+            </div>
         </div>
-        <div class="status-player-count">
-            <div class="player-count">0</div>
+        <div class="status-server">
+            <img class="server-status-icon" src="assets/images/icon.png">
+            <div class="server-status-infos">
+                <div class="server-status-name"></div>
+                <div class="server-status-text">Offline - 0 ms</div>
+            </div>
+            <div class="status-player-count">
+                <div class="player-count">0</div>
+            </div>
         </div>
     </div>
 
     <div class="home-bottom">
         <div class="new-tab">
-            <div class="titre-tab-new">Noticias</div>
-            <div class="news-list content-scroll"></div>
+            <div class="news-columns">
+                <div class="news-list content-scroll">
+                    <div class="news-block">    
+                        <div class="news-header">
+                            <div class="header-text">
+                                <div class="titlenews">Noticias</div>
+                            </div>
+                        </div>
+                        <div class="news-content">
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
         <div class="social-tab">
             <div class="social-list content-scroll">
                 <div data-url="https://discord.comunidadojo.xyz/" class="social-block">
                     <div class="icon-discord icon-social"></div>
                 </div>
+                <div class="social-block" data-url="https://www.youtube.com/@DevRex">
+                    <div class="icon-youtube icon-social"></div>
+                </div>
             </div>
-        </div>
-    </div>
-
-    <div class="sidebar">
-        <div class="player-options">
-            <div class="player-head"></div>
         </div>
 
         <div class="play-elements">
             <div class="play-instance">
-                <button class="play-btn">Jugar</button>
-                <div class="instance-select icon-arrow"></div>
+                <button class="play-btn">JUGAR</button>
             </div>
             <div class="info-starting-game">
                 <div class="info-starting-game-text">Conectando...</div>
                 <progress value="0" max="0" class="progress-bar"></progress>
             </div>
         </div>
+    </div>
 
-        <div class="settings-btn icon-settings"></div>
+    <div class="sidebar">
+        <div class="player-options">
+            <div class="head-frame"><div class="player-head"></div></div>
+        </div>
+        <div class="instance-manager">
+            <div class="recent-instances"></div>
+            <div class="instance-select">
+                <img src="assets/images/svgs/grid.svg" alt="grid icon" class="grid-icon">
+            </div>
+        </div>
+        <div class="button-container">
+            <div class="music-btn icon-speaker-on"></div>
+            <div class="settings-btn icon-settings"></div>
+        </div>
     </div>
 
     <div class="instance-popup">

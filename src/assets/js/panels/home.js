@@ -2,10 +2,12 @@
  * @author Luuxis
  * @license CC-BY-NC 4.0 - https://creativecommons.org/licenses/by-nc/4.0
  */
-import { config, database, logger, changePanel, appdata, setStatus, pkg, popup } from '../utils.js'
+import { config, database, logger, changePanel, appdata, setStatus, pkg, popup, 
+    discordAccount, toggleMusic, fadeOutAudio, setBackgroundMusic } from '../utils.js'
 
 const { Launch } = require('minecraft-java-core')
 const { shell, ipcRenderer } = require('electron')
+let playing = false;
 
 class Home {
     static id = "home";
@@ -14,8 +16,11 @@ class Home {
         this.db = new database();
         this.news()
         this.socialLick()
+        this.notification()
+        this.startNotificationCheck()
         this.instancesSelect()
-        document.querySelector('.settings-btn').addEventListener('click', e => changePanel('settings'))
+        this.startButtonManager()
+        document.querySelector('.settings-btn').addEventListener('click', e => discordAccount() && changePanel('settings'));
     }
 
     async news() {
@@ -98,6 +103,78 @@ class Home {
                 shell.openExternal(e.target.dataset.url)
             })
         });
+    }
+
+    async notification() { 
+
+        let notification = document.querySelector('.message-container');
+        let notificationIcon = document.querySelector('.message-icon');
+        let notificationTitle = document.querySelector('.message-title');
+        let notificationContent = document.querySelector('.message-content');
+
+        let colorRed = getComputedStyle(document.documentElement).getPropertyValue('--notification-red');
+        let colorGreen = getComputedStyle(document.documentElement).getPropertyValue('--notification-green');
+        let colorBlue = getComputedStyle(document.documentElement).getPropertyValue('--notification-blue');
+        let colorYellow = getComputedStyle(document.documentElement).getPropertyValue('--notification-yellow');
+
+         notificationTitle.innerHTML = '¡Atención!';
+         notificationContent.innerHTML = "Si cierras sesión de la cuenta de discord el launcher se reiniciará.";
+         notification.style.background = colorYellow;
+         notificationIcon.src = 'assets/images/notification/bell.png';
+        await this.showNotification()
+    }
+
+    async showNotification() {
+        let notification = document.querySelector('.message-container');
+        notification.style.display = 'flex';
+        notification.style.visibility = 'visible';
+        requestAnimationFrame(function() {
+            requestAnimationFrame(function() {
+                notification.style.opacity = '1';
+            });
+        });
+
+    }
+    
+    async hideNotification() {
+        let notification = document.querySelector('.message-container');
+        notification.style.opacity = '0';
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        notification.style.visibility = 'hidden';
+        notification.style.display = 'none';
+    }
+
+    startNotificationCheck() {
+        this.intervalId = setInterval(() => {
+            this.notification();
+        }, 60000);
+        console.log('Comprobación de notificación programada iniciada.');
+    }
+
+    stopNotificationCheck() {
+        if (this.intervalId) {
+            clearInterval(this.intervalId);
+            this.intervalId = null;
+        }
+        console.log('Se ha detenido la comprobación programada de notificaciones.');
+    }
+
+    async startButtonManager() {
+        this.startMusicButton()
+    }
+
+    async startMusicButton() {
+            const db = new database();
+            let configClient = await this.db.readData('configClient')
+            document.querySelector('.music-btn').style.display = 'block';
+            document.querySelector('.music-btn').addEventListener('click', function() {if (!playing) toggleMusic();});
+            if (configClient.launcher_config.music_muted) {
+                document.querySelector('.music-btn').classList.remove('icon-speaker-on');
+                document.querySelector('.music-btn').classList.add('icon-speaker-off');
+            } else {
+                document.querySelector('.music-btn').classList.remove('icon-speaker-off');
+                document.querySelector('.music-btn').classList.add('icon-speaker-on');
+            }
     }
 
     async instancesSelect() {
