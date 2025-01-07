@@ -7,7 +7,7 @@ import Login from './panels/login.js';
 import Home from './panels/home.js';
 import Settings from './panels/settings.js';
 
-import Snowfall from './snow.js';
+//import Snowfall from './snow.js';
 
 // import modules
 import { logger, config, changePanel, database, popup,
@@ -33,7 +33,7 @@ class Launcher {
         console.log('Initializing Launcher...');
         this.shortcut()
         await setBackground()
-        new Snowfall("snowCanvas"); // Inicia los copos de nieve
+     //   new Snowfall("snowCanvas"); // Inicia los copos de nieve
         if (process.platform == 'win32') this.initFrame();
         this.config = await config.GetConfig().then(res => res).catch(err => err);
         if (await this.config.error) return this.errorConnect()
