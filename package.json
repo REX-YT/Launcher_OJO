@@ -1,7 +1,7 @@
 {
     "name": "OJOLAND-Launcher",
     "preductname": "OJOLAND Launcher",
-    "version": "3.0.5",
+    "version": "3.0.6",
     "description": "Lanzador oficial de OJOLAND",
     "main": "src/app.js",
     "author": {
@@ -9,7 +9,7 @@
         "email": "brawlstars240304@gmail.com",
         "url": "https://github.com/REX-YT"
     },
-    "url": "http://api.comunidadojo.xyz/api-OJOLAND",
+    "url": "https://api.comunidadojo.xyz/",
     "discord_server_id": "739664769014956134",
     "discord_url": "https://discord.comunidadojo.xyz",
     "scripts": {
