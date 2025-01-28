@@ -1,7 +1,7 @@
 {
     "name": "OJOLAND-Launcher",
     "preductname": "OJOLAND Launcher",
-    "version": "3.0.6",
+    "version": "3.0.7",
     "description": "Lanzador oficial de OJOLAND",
     "main": "src/app.js",
     "author": {
@@ -29,6 +29,7 @@
         "minecraft-java-core": "^3.8.1",
         "node-bdd": "^2.0.3",
         "node-fetch": "^2.7.0",
+        "node-mcstatus": "^1.2.1",
         "url": "^0.11.4",
         "xml-js": "^1.6.11"
     },

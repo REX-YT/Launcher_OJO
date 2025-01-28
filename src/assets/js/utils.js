@@ -3,10 +3,10 @@
  * @license CC-BY-NC 4.0 - https://creativecommons.org/licenses/by-nc/4.0
  */
 
-const { ipcRenderer } = require('electron')
-const { Status } = require('minecraft-java-core')
+const { ipcRenderer } = require('electron');
 const fs = require('fs');
 const pkg = require('../package.json');
+const mcs = require('node-mcstatus');
 
 import config from './utils/config.js';
 import database from './utils/database.js';
@@ -285,14 +285,19 @@ async function setStatus(opt) {
 
     let { ip, port, nameServer } = opt
     nameServerElement.innerHTML = nameServer
-    let status = new Status(ip, port);
-    let statusServer = await status.getStatus().then(res => res).catch(err => err);
+    const options = { query: true }; 
 
-    if (!statusServer.error) {
+    const startTime = Date.now();
+
+    let statusServer = await mcs.statusJava(ip, port, options).then(res => res).catch(err => err);
+
+    const ping = Date.now() - startTime;
+
+    if (statusServer.online) {
         statusServerElement.classList.remove('red')
         document.querySelector('.status-player-count').classList.remove('red')
-        statusServerElement.innerHTML = `En línea - ${statusServer.ms} ms`
-        playersOnline.innerHTML = statusServer.playersConnect
+        statusServerElement.innerHTML = `En línea - ${ping} ms`
+        playersOnline.innerHTML = statusServer.players.online
     } else {
         statusServerElement.classList.add('red')
         statusServerElement.innerHTML = `Apagado - 0 ms`
