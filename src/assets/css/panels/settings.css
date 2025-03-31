@@ -659,3 +659,43 @@
     font-size: 14px;
     color: #555;
 }
+
+.data-management-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 20px;
+    font-size: 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    margin: 10px;
+    width: 250px;
+    text-align: center;
+    font-weight: bold;
+  }
+  
+  .reset-config-btn {
+    background-color: var(--box-button);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+  
+  .reset-config-btn:hover {
+    background-color: var(--box-button-hover);
+  }
+  
+  .delete-all-btn {
+    background-color: #d32f2f;
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+  
+  .delete-all-btn:hover {
+    background-color: #b71c1c;
+  }
+  
+  .data-management-btn i {
+    margin-right: 8px;
+    font-size: 1.1rem;
+  }

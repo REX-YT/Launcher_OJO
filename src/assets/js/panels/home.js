@@ -3,7 +3,7 @@
  * @license CC-BY-NC 4.0 - https://creativecommons.org/licenses/by-nc/4.0
  */
 import { config, database, logger, changePanel, appdata, setStatus, pkg, popup, 
-    discordAccount, toggleMusic, fadeOutAudio, setBackgroundMusic } from '../utils.js'
+    discordAccount, toggleMusic, fadeOutAudio, setBackgroundMusic, getUsername } from '../utils.js'
 
 const { Launch } = require('minecraft-java-core')
 const { shell, ipcRenderer } = require('electron')
@@ -21,6 +21,7 @@ class Home {
         this.instancesSelect()
         this.startButtonManager()
         document.querySelector('.settings-btn').addEventListener('click', e => discordAccount() && changePanel('settings'));
+        this.jugadorTooltip();
     }
 
     async news() {
@@ -407,6 +408,43 @@ class Home {
         let day = date.getDate()
         let allMonth = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']
         return { year: year, month: allMonth[month - 1], day: day }
+    }
+
+    jugadorTooltip() {
+        const playerOptions = document.querySelector('.player-options');
+        const playerHead = document.querySelector('.player-head');
+
+        const showTooltip = async (element) => {
+            const username = await getUsername();
+            let tooltip = document.createElement('div');
+            tooltip.classList.add('tooltip');
+            tooltip.innerHTML = username;
+            document.body.appendChild(tooltip);
+            let rect = element.getBoundingClientRect();
+            tooltip.style.left = `${rect.right + window.scrollX + 10}px`;
+            tooltip.style.top = `${rect.top + window.scrollY + rect.height / 2 - tooltip.offsetHeight / 2}px`;
+            element.tooltip = tooltip;
+            requestAnimationFrame(() => {
+                tooltip.style.opacity = '1';
+            });
+        };
+
+        const hideTooltip = (element) => {
+            if (element.tooltip) {
+                element.tooltip.style.opacity = '0';
+                setTimeout(() => {
+                    if (element.tooltip) {
+                        document.body.removeChild(element.tooltip);
+                        element.tooltip = null;
+                    }
+                }, 200);
+            }
+        };
+
+        playerOptions.addEventListener('mouseenter', () => showTooltip(playerOptions));
+        playerOptions.addEventListener('mouseleave', () => hideTooltip(playerOptions));
+        playerHead.addEventListener('mouseenter', () => showTooltip(playerHead));
+        playerHead.addEventListener('mouseleave', () => hideTooltip(playerHead));
     }
 }
 export default Home;

@@ -95,60 +95,68 @@ input::-webkit-inner-spin-button {
 }
 
 .popup {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    z-index: 10;
-    display: none;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1000;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.6); /* Fondo oscuro transparente */
+  backdrop-filter: blur(10px); /* Efecto difuminado */
 }
 
 .popup-tab {
-    width: 40%;
-    padding: 15px;
-    z-index: 10;
-    background-color: var(--sidebar);
-    border-right: 1px solid var(--sidebar-border);
-    transition: all 0.2s;
-    background: rgba( 0, 0, 0, 1 );
-    border-radius: 10px;
-    border: 1px solid rgba( 255, 255, 255, 0.18 );
+  width: 40%;
+  padding: 20px;
+  background: rgba(20, 20, 20, 0.9); /* Color oscuro con transparencia */
+  border-radius: 15px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease-in-out;
 }
 
 .popup-title {
-    text-align: center;
-    font-size: 2rem;
-    border-bottom: solid 4px var(--color);
-    margin-bottom: 1rem;
+  text-align: center;
+  font-size: 2rem;
+  font-weight: bold;
+  color: #ffffff;
+  border-bottom: solid 3px var(--color);
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
 }
 
 .popup-options {
-    display: none;
-    align-items: end;
-    flex-direction: row-reverse;
-    gap: 15px;
+  display: none;
+  align-items: end;
+  flex-direction: row-reverse;
+  gap: 15px;
+  margin-top: 1rem;
 }
 
 .popup-button {
   font-size: 1rem;
-  font-weight: 600; /* Peso equilibrado */
-  padding: 0.5rem 2rem; /* Espaciado interno más sencillo */
-  margin: 0.5rem 0; /* Espaciado uniforme */
+  font-weight: 600;
+  padding: 0.6rem 2.2rem;
+  margin: 0.5rem 0;
   text-align: center;
-  background-color: var(--box-button); /* Color principal */
-  border: none; /* Eliminamos bordes innecesarios */
-  border-radius: 20px; /* Bordes más suaves */
-  color: #fff;
+  background: rgba(50, 50, 50, 0.8); /* Botón oscuro con transparencia */
+  border: none;
+  border-radius: 25px;
+  color: #ffffff;
   cursor: pointer;
-  z-index: 2;
-  transition: background-color 0.3s ease, transform 0.2s ease; /* Transición más simple */
 }
 
 .popup-button:hover {
-  background-color: var(--box-button-hover); /* Color más oscuro al pasar el cursor */
-  transform: scale(1.05); /* Pequeña ampliación para efecto interactivo */
+  background: rgba(80, 80, 80, 0.9); /* Cambio de color sutil */
+  transform: scale(1.08);
+}
+
+.popup-button:active {
+  transform: scale(1.02);
 }
 
 .panel {
@@ -352,7 +360,7 @@ input::-webkit-inner-spin-button {
   }
   
   .log .log-content .logger .content .info {
-    color: var(--text);
+    color: white;
   }
   
   .log .log-content .logger .content .warn {
@@ -380,100 +388,23 @@ input::-webkit-inner-spin-button {
     opacity: 1;
   }
 
-/* Estilos para el modal de términos y condiciones */
-.terms-modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 99%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.7);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  z-index: 10;
-  padding: 10px; /* Añade espaciado alrededor del modal */
-}
+  .console-base-version {
+    font-size: 0.8em;
+    font-weight: normal;
+    opacity: 0.8;
+    margin-left: 10px;
+    font-style: italic;
+    display: inline-block; /* Ensure it's displayed properly */
+    color: #aaa; /* Lighter color to distinguish it */
+  }
 
-.terms-header {
-  text-align: center;
-  color: #fff;
-  margin-bottom: 20px;
-}
-
-.terms-header h2 {
-  font-size: 1.8rem;
-  margin: 0;
-  margin-bottom: 10px; /* Espaciado adicional debajo del título */
-}
-
-.terms-header p {
-  font-size: 1rem;
-  margin: 10px 0;
-}
-
-.terms-container {
-  width: 90%; /* Aumenta el ancho del contenedor */
-  max-width: 900px; /* Aumenta el máximo ancho */
-  height: 60%;
-  max-height: 70%;
-  background-color: var(--box);
-  border-radius: 10px;
-  padding: 20px;
-  overflow-y: auto; /* Barra de desplazamiento vertical */
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  margin-bottom: 20px;
-}
-
-.terms-buttons {
-  display: flex;
-  justify-content: center;
-  gap: 20px; /* Espaciado entre botones */
-  margin-top: 20px; /* Espaciado adicional arriba de los botones */
-}
-
-.accept-terms-btn, .decline-terms-btn {
-  padding: 10px 20px;
-  font-size: 16px;
-  border: none;
-  border-radius: 20px; /* Botones redondeados */
-  cursor: pointer;
-  transition: background-color 0.2s, color 0.2s;
-}
-
-.accept-terms-btn {
-  background: linear-gradient(45deg, #00FF00, #008000); /* Verde */
-  color: #fff;
-}
-
-.accept-terms-btn:disabled {
-  background: var(--box-button-hover);
-  cursor: not-allowed;
-}
-
-.accept-terms-btn:hover:not(:disabled) {
-  background: #004d00;
-}
-
-.decline-terms-btn {
-  background: linear-gradient(45deg, #FF0000, #8B0000); /* Rojo */
-  color: #fff;
-}
-
-.decline-terms-btn:hover {
-  background: #660000;
-}
-
-/* Contenedor del tooltip */
+  
 .tooltip-container {
   position: relative;
   display: inline-block;
 }
 
-/* Tooltip */
+
 .tooltip-text {
   visibility: hidden;
   width: 220px;
@@ -484,25 +415,106 @@ input::-webkit-inner-spin-button {
   padding: 5px 0;
   position: absolute;
   z-index: 1;
-  bottom: 125%; /* Posición del tooltip */
+  bottom: 125%;
   left: 50%;
-  margin-left: -110px; /* Centrando el tooltip */
+  margin-left: -110px;
   opacity: 0;
   transition: opacity 0.3s;
   font-size: 14px;
 }
 
-/* Mostrar tooltip cuando el botón está deshabilitado y el mouse está sobre el contenedor */
 .tooltip-container:hover .tooltip-text,
 .tooltip-container button:disabled:hover + .tooltip-text {
   visibility: visible;
   opacity: 1;
 }
 
-/* Tooltip para el botón habilitado */
 .tooltip-container button:enabled + .tooltip-text {
   visibility: hidden;
   opacity: 0;
+}
+
+.scroll-to-bottom {
+  display: none;
+  position: absolute;
+  bottom: 150px; 
+  right: 10px;
+  width: 50px;
+  height: 50px;
+  background: rgba( 0, 0, 0, 0.9 );
+  color: #fff;
+  border: 1px solid rgba( 255, 255, 255, 0.18 );
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  opacity: 0;
+  transition: all 0.5s;
+}
+
+.report-issue {
+  position: absolute;
+  bottom: 10px; 
+  right: 10px;
+  width: 50px;
+  height: 50px;
+  background: rgba(0, 0, 0, 0.9);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  opacity: 1;
+  transition: all 0.5s;
+}
+
+.report-issue:hover {
+  background-color: var(--box-button-hover);
+  transition: all 0.5s;
+}
+
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 10000;
+  background:  linear-gradient(135deg, rgb(10, 10, 10) 20%, rgb(30, 30, 30) 50%, rgb(0, 0, 0) 80%);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.5s ease, visibility 0.5s ease;
+  pointer-events: none;
+}
+
+.loading-overlay.active {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+
+.loading-text {
+  color: #fff;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.loading-credit {
+  color: #fff;
+  font-size: 12px;
+  font-weight: bold;
 }
 
 #snowCanvas {

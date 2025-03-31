@@ -2,6 +2,7 @@
 node_modules
 app
 test
+.env
 dist
 node-v*
 data

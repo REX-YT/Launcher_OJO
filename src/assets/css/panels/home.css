@@ -368,6 +368,7 @@
 .play-btn {
     border: none;
     border-radius: 10px;
+    padding: 10px 20px;
     background: none;
     color:#fff;
     font-size: 2rem;

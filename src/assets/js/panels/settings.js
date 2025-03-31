@@ -6,6 +6,8 @@
 import { changePanel, accountSelect, database, Slider, config, setStatus, popup, appdata, setBackground } from '../utils.js'
 const { ipcRenderer } = require('electron');
 const os = require('os');
+const fs = require('fs');
+const path = require('path');
 
 class Settings {
     static id = "settings";
@@ -322,6 +324,169 @@ class Settings {
                 }
             }
         })
+
+        const resetConfigBtn = document.querySelector('.reset-config-btn');
+        const deleteAllBtn = document.querySelector('.delete-all-btn');
+
+        if (resetConfigBtn) {
+            resetConfigBtn.addEventListener('click', async () => {
+                this.handleResetConfig();
+            });
+        }
+
+        if (deleteAllBtn) {
+            deleteAllBtn.addEventListener('click', async () => {
+                this.handleDeleteAll();
+            });
+        }
+
+    }
+
+    async handleResetConfig() {
+        const resetPopup = new popup();
+        const result = await new Promise(resolve => {
+            resetPopup.openDialog({
+                title: 'Reiniciar configuración',
+                content: '¿Estás seguro de que quieres reiniciar toda la configuración del launcher? Esta acción no puede deshacerse y el launcher se reiniciará.<br><br>Los archivos del juego (assets, bibliotecas, instancias) no se eliminarán.',
+                options: true,
+                callback: resolve
+            });
+        });
+
+        if (result === 'cancel') {
+            return;
+        }
+        
+        try {
+            const processingPopup = new popup();
+            processingPopup.openPopup({
+                title: 'Reiniciando configuración',
+                content: 'Por favor, espera mientras se reinicia la configuración...',
+                color: 'var(--color)'
+            });
+            
+            // Primero, vaciar la tabla de cuentas
+            const accounts = await this.db.readAllData("accounts");
+            if (accounts && accounts.length > 0) {
+                console.log(`Eliminando ${accounts.length} cuentas...`);
+                for (const account of accounts) {
+                    await this.db.deleteData('accounts', account.ID);
+                }
+            }
+            
+            // Luego eliminar configClient
+            await this.db.deleteData('configClient');
+            
+            // Doble verificación - comprobar si realmente se eliminaron las cuentas
+            const remainingAccounts = await this.db.readAllData("accounts");
+            if (remainingAccounts && remainingAccounts.length > 0) {
+                console.warn(`Aún quedan ${remainingAccounts.length} cuentas, forzando limpieza completa...`);
+                await this.db.clearDatabase(); // Método que elimina todo el contenido de la base de datos
+            }
+        
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            processingPopup.closePopup();
+            console.log('Reiniciando launcher...');
+            ipcRenderer.send('app-restart');
+            
+        } catch (error) {
+            console.error('Error resetting config:', error);
+            const errorPopup = new popup();
+            errorPopup.openPopup({
+                title: 'Error',
+                content: `Ha ocurrido un error al reiniciar la configuración: ${error.message}`,
+                color: 'red',
+                options: true
+            });
+        }
+    }
+
+    async handleDeleteAll() {
+        const deletePopup = new popup();
+        const result = await new Promise(resolve => {
+            deletePopup.openDialog({
+                title: 'Eliminar todos los datos',
+                content: '⚠️ ADVERTENCIA ⚠️<br><br>¿Estás seguro de que quieres eliminar TODOS los datos del launcher? Esta acción eliminará:<br>- Todas las configuraciones<br>- Todas las instancias de juego<br>- Todos los assets y bibliotecas descargados<br><br>Esta acción no puede deshacerse y el launcher se reiniciará.',
+                options: true,
+                callback: resolve
+            });
+        });
+
+        if (result === 'cancel') {
+            return;
+        }
+        
+        const confirmDeletePopup = new popup();
+        const confirmResult = await new Promise(resolve => {
+            confirmDeletePopup.openDialog({
+                title: 'Confirmar eliminación total',
+                content: '¿Estás ABSOLUTAMENTE seguro? Esta acción eliminará todos los datos y no podrás recuperarlos.',
+                options: true,
+                callback: resolve
+            });
+        });
+
+        if (confirmResult === 'cancel') {
+            return;
+        }
+        
+        try {
+            const processingPopup = new popup();
+            processingPopup.openPopup({
+                title: 'Eliminando datos',
+                content: 'Por favor, espera mientras se eliminan todos los datos...',
+                color: 'var(--color)'
+            });
+            
+            const appdataPath = await appdata();
+            const dataPath = path.join(
+                appdataPath,
+                process.platform == 'darwin' ? this.config.dataDirectory : `.${this.config.dataDirectory}`
+            );
+            
+            if (fs.existsSync(dataPath)) {
+                await this.recursiveDelete(dataPath);
+                console.log('Data directory deleted successfully');
+            }
+
+            await this.db.deleteData('configClient');
+            await this.db.deleteData('accounts');
+            
+            // Wait a moment before restarting
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            // Restart the launcher
+            processingPopup.closePopup();
+            ipcRenderer.send('app-restart');
+            
+        } catch (error) {
+            console.error('Error deleting all data:', error);
+            const errorPopup = new popup();
+            errorPopup.openPopup({
+                title: 'Error',
+                content: `Ha ocurrido un error al eliminar los datos: ${error.message}`,
+                color: 'red',
+                options: true
+            });
+        }
+    }
+
+    async recursiveDelete(directoryPath) {
+        return new Promise((resolve, reject) => {
+            if (typeof fs.rm === 'function') {
+                fs.rm(directoryPath, { recursive: true, force: true }, err => {
+                    if (err) reject(err);
+                    else resolve();
+                });
+            } 
+            else {
+                fs.rmdir(directoryPath, { recursive: true }, err => {
+                    if (err) reject(err);
+                    else resolve();
+                });
+            }
+        });
     }
 }
 export default Settings;

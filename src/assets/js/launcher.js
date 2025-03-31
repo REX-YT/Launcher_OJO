@@ -6,6 +6,7 @@
 import Login from './panels/login.js';
 import Home from './panels/home.js';
 import Settings from './panels/settings.js';
+import LogsSystem from "./logsSystem.js";
 
 //import Snowfall from './snow.js';
 
@@ -21,17 +22,24 @@ import { logger, config, changePanel, database, popup,
     getDiscordUsername,
     setBackgroundMusic,
     setDiscordPFP, } from './utils.js';
+
+import { sendClientReport } from './RexApiLib.js';
 const { AZauth, Microsoft, Mojang } = require('minecraft-java-core');
 
 // libs
 const { ipcRenderer } = require('electron');
 const fs = require('fs');
+let dev = process.env.NODE_ENV === "dev";
 
 class Launcher {
     async init() {
-        this.initLog();
-        console.log('Initializing Launcher...');
+      if (dev) this.initLog();
+      else this.initWindow();  
+  
+      console.log("Iniciando Launcher...");
+
         this.shortcut()
+        this.PantallaCarga();
         await setBackground()
      //   new Snowfall("snowCanvas"); // Inicia los copos de nieve
         if (process.platform == 'win32') this.initFrame();
@@ -54,6 +62,58 @@ class Launcher {
         new logger(pkg.name, '#7289da')
     }
 
+    PantallaCarga() {
+    
+      if (this.loadingDisplayTimer) {
+        clearTimeout(this.loadingDisplayTimer);
+      }
+      
+      const loadingOverlay = document.querySelector('.loading-overlay');
+      if (loadingOverlay) {
+        loadingOverlay.classList.add('active');
+        loadingOverlay.style.visibility = 'visible';
+        loadingOverlay.style.opacity = '1';
+        loadingOverlay.style.display = 'flex';
+      }
+      
+      this.loadingDisplayTimer = setTimeout(() => {
+        this.OcultarPantallaCarga();
+      }, 3000);
+    }
+
+    OcultarPantallaCarga() {
+      const loadingOverlay = document.querySelector('.loading-overlay');
+      if (!loadingOverlay) {
+        console.warn("No se encontró elemento loading-overlay");
+        return;
+      }
+      
+      
+      const configClient = this.db.readData('configClient');
+      if (configClient && configClient.launcher_config) {
+        loadingOverlay.style.transition = 'none';
+        loadingOverlay.style.opacity = '0';
+        loadingOverlay.style.visibility = 'hidden';
+        loadingOverlay.classList.remove('active');
+        return;
+      }
+      
+      try {
+        loadingOverlay.classList.remove('active');
+        
+        setTimeout(() => {
+          loadingOverlay.style.opacity = '0';
+          loadingOverlay.style.visibility = 'hidden';
+        }, 800);
+      } catch (err) {
+        console.error("Error al ocultar pantalla de carga:", err);
+        loadingOverlay.style.opacity = '0';
+        loadingOverlay.style.visibility = 'hidden';
+        loadingOverlay.style.display = 'none';
+      }
+    }
+    
+
     shortcut() {
         document.addEventListener('keydown', e => {
             if (e.ctrlKey && e.keyCode == 87) {
@@ -62,6 +122,184 @@ class Launcher {
         })
     }
 
+    async initWindow() {
+      window.logger2 = {
+        launcher: new LogsSystem("Launcher", "#FF7F18"),
+        minecraft: new LogsSystem("Minecraft", "#43B581"),
+      };
+  
+      this.initLogs();
+  
+      window.console = window.logger2.launcher;
+  
+      window.onerror = (message, source, lineno, colno, error) => {
+        console.error(error);
+        source = source.replace(`${window.location.origin}/app/`, "");
+        let stack = error.stack
+          .replace(
+            new RegExp(
+              `${window.location.origin}/app/`.replace(/\//g, "\\/"),
+              "g"
+            ),
+            ""
+          )
+          .replace(/\n/g, "<br>")
+          .replace(/\x20/g, "&nbsp;");
+        new popup().openPopup(
+          "Se ha producido un error.",
+          `
+              <b>Error:</b> ${error.message}<br>
+              <b>Archivo:</b> ${source}:${lineno}:${colno}<br>
+              <b>Stacktrace:</b> ${stack}`,
+          "warning",
+          {
+            value: "Relancer",
+            func: () => {
+              document.body.classList.add("hide");
+              win.reload();
+            },
+          }
+        );
+        document.body.classList.remove("hide");
+        return true;
+      };
+  
+      window.onclose = () => {
+        localStorage.removeItem("distribution");
+      };
+
+      const baseVersionInfoElement = document.getElementById('base-version-info');
+    
+      if (pkg.version && baseVersionInfoElement) {
+          baseVersionInfoElement.textContent = `v${pkg.version}`;
+          baseVersionInfoElement.style.display = 'inline';
+        }
+
+    }
+
+
+    async initLogs() {
+      let logs = document.querySelector(".log-bg");
+      let logs1 = document.querySelector(".logger");
+      let logContent = document.querySelector(".logger .content");
+      let scrollToBottomButton = document.querySelector(".scroll-to-bottom");
+      let autoScroll = true;
+  
+      document.addEventListener("keydown", (e) => {
+        if ((e.ctrlKey && e.shiftKey && e.keyCode == 73) || e.keyCode == 123) {
+          logs.classList.toggle("show");
+          logs1.classList.toggle("open");
+        }
+      });
+  
+      document.addEventListener("keydown", (e) => {
+        if (e.key === 'Escape' && logs.classList.contains('show')) {
+          logs.classList.toggle("show");
+          logs1.classList.toggle("open");
+        }
+      });
+  
+      let close = document.querySelector(".log-close");
+      close.addEventListener("click", () => {
+        logs.classList.toggle("show");
+        logs1.classList.toggle("open");
+      });
+  
+      logContent.addEventListener("scroll", () => {
+        if (logContent.scrollTop + logContent.clientHeight < logContent.scrollHeight) {
+          autoScroll = false;
+          scrollToBottomButton.classList.add("show");
+          scrollToBottomButton.style.pointerEvents = "auto";
+        } else {
+          autoScroll = true;
+          scrollToBottomButton.classList.remove("show");
+          scrollToBottomButton.style.pointerEvents = "none";
+        }
+      });
+  
+      scrollToBottomButton.addEventListener("click", () => {
+        autoScroll = true;
+        logContent.scrollTo({
+          top: logContent.scrollHeight,
+          behavior: "smooth"
+        });
+        scrollToBottomButton.classList.remove("show");
+        scrollToBottomButton.style.pointerEvents = "none";
+      });
+  
+      let reportIssueButton = document.querySelector(".report-issue");
+      reportIssueButton.classList.add("show");
+      reportIssueButton.addEventListener("click", () => {
+        logs.classList.toggle("show");
+        this.confirmReportIssue();
+      });
+  
+      logger2.launcher.on("info", (...args) => {
+        addLog(logContent, "info", args);
+      });
+  
+      logger2.launcher.on("warn", (...args) => {
+        addLog(logContent, "warn", args);
+      });
+  
+      logger2.launcher.on("debug", (...args) => {
+        addLog(logContent, "debug", args);
+      });
+  
+      logger2.launcher.on("error", (...args) => {
+        addLog(logContent, "error", args);
+      });
+  
+      function addLog(content, type, args) {
+        let final = [];
+        for (let arg of args) {
+          if (typeof arg == "string") {
+            final.push(arg);
+          } else if (arg instanceof Error) {
+            final.push(arg.stack);
+          } else if (typeof arg == "object") {
+            final.push(JSON.stringify(arg));
+          } else {
+            final.push(arg);
+          }
+        }
+        let span = document.createElement("span");
+        span.classList.add(type);
+        span.innerHTML = `${final.join(" ")}<br>`
+          .replace(/\x20/g, "&nbsp;")
+          .replace(/\n/g, "<br>");
+  
+        content.appendChild(span);
+        if (autoScroll) {
+          content.scrollTop = content.scrollHeight;
+        }
+      }
+  
+      logContent.scrollTop = logContent.scrollHeight;
+    }
+
+    async confirmReportIssue() {
+      let reportPopup = new popup();
+      let logs = document.querySelector(".log-bg");
+      let dialogResult = await new Promise(resolve => {
+        reportPopup.openDialog({
+              title: 'Enviar reporte?',
+              content: 'Si estas experimentando problemas con el launcher, puedes enviar un reporte de rendimiento para ayudarnos a solucionar el problema. <br><br>Quieres enviar un reporte a DevRex?',
+              options: true,
+              callback: resolve
+          });
+      });
+      if (dialogResult === 'cancel') {
+          logs.classList.toggle("show");
+          return;
+      }
+      this.sendReport();
+    }
+  
+    sendReport() {
+      let logContent = document.querySelector(".logger .content").innerText;
+      sendClientReport(logContent);
+    }
 
     errorConnect() {
         new popup().openPopup({
@@ -393,6 +631,7 @@ class Launcher {
                     refresh_accounts.ID = account_ID
                     await this.db.updateData('accounts', refresh_accounts, account_ID)
                     await addAccount(refresh_accounts)
+                    await setUsername(refresh_accounts.name)
                     if (account_ID == account_selected) accountSelect(refresh_accounts)
                 } else if (account.meta.type == 'AZauth') {
                     console.log(`Account Type: ${account.meta.type} | Username: ${account.name}`);
@@ -417,6 +656,7 @@ class Launcher {
                     refresh_accounts.ID = account_ID
                     this.db.updateData('accounts', refresh_accounts, account_ID)
                     await addAccount(refresh_accounts)
+                    await setUsername(refresh_accounts.name)
                     if (account_ID == account_selected) accountSelect(refresh_accounts)
                 } else if (account.meta.type == 'Mojang') {
                     console.log(`Account Type: ${account.meta.type} | Username: ${account.name}`);
@@ -431,6 +671,7 @@ class Launcher {
 
                         refresh_accounts.ID = account_ID
                         await addAccount(refresh_accounts)
+                        await setUsername(refresh_accounts.name)
                         this.db.updateData('accounts', refresh_accounts, account_ID)
                         if (account_ID == account_selected) accountSelect(refresh_accounts)
                         continue;
@@ -451,6 +692,7 @@ class Launcher {
                     refresh_accounts.ID = account_ID
                     this.db.updateData('accounts', refresh_accounts, account_ID)
                     await addAccount(refresh_accounts)
+                    await setUsername(refresh_accounts.name)
                     if (account_ID == account_selected) accountSelect(refresh_accounts)
                 } else {
                     console.error(`[Account] ${account.name}: Account Type Not Found`);

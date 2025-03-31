@@ -3,9 +3,8 @@
         <p>Configuraciones</p>
         <div class="nav-box">
             <div id="account" class="nav-settings-btn active-settings-BTN">CUENTAS</div>
-            <div id="java" class="nav-settings-btn">JAVA</div>
-            <div id="resolution" class="nav-settings-btn">RESOLUCIÓN</div>
-            <div id="launcher" class="nav-settings-btn">LAUNCHER</div>
+            <div id="java" class="nav-settings-btn">JUEGO</div>
+            <div id="launcher" class="nav-settings-btn">LANZADOR</div>
             <div id="save" class="nav-settings-btn">Guardar</div>
         </div>
     </div>
@@ -68,6 +67,23 @@
             </div>
         </div>
 
+        <div class="titre-tab">Parámetros de resolución Minecraft</div>
+        <div class="settings-elements-box">
+            <div class="setting-text">
+                Establece una resolución personalizada para adaptar un juego a tu pantalla.<br>
+                De forma predeterminada, el juego comienza en 854 x 480,<br>puedes modificar este valor para mayor comodidad al jugar
+                óptimo. La resolución ideal es 1280 x 720.
+            </div>
+            <div class="settings-elements content-center">
+                <div class="input-size-element">
+                    <input type="number" class="width-size input-resolution">
+                    <div class="size-cross"></div>
+                    <input type="number" class="height-size input-resolution">
+                </div>
+                <div class="size-reset size-btn">Por defecto</div>
+            </div>
+        </div>
+
         <div class="titre-tab">Java</div>
         <div class="settings-elements-box">
             <div class="setting-text">
@@ -83,25 +99,6 @@
                     <div class="java-path-set java-path-btn">Cambiar</div>
                     <div class="java-path-reset java-path-btn">Por defecto</div>
                 </div>
-            </div>
-        </div>
-    </div>
-
-    <div id="resolution-tab" class="container-settings">
-        <div class="titre-tab">Parámetros de resolución Minecraft</div>
-        <div class="settings-elements-box">
-            <div class="setting-text">
-                Establece una resolución personalizada para adaptar un juego a tu pantalla.<br>
-                De forma predeterminada, el juego comienza en 854 x 480,<br>puedes modificar este valor para mayor comodidad al jugar
-                óptimo. La resolución ideal es 1280 x 720.
-            </div>
-            <div class="settings-elements content-center">
-                <div class="input-size-element">
-                    <input type="number" class="width-size input-resolution">
-                    <div class="size-cross"></div>
-                    <input type="number" class="height-size input-resolution">
-                </div>
-                <div class="size-reset size-btn">Por defecto</div>
             </div>
         </div>
     </div>
@@ -153,15 +150,27 @@
             </div>
         </div>
 
-        <!-- <div class="titre-tab">Environnement INTEL</div>
+        <div class="titre-tab">
+            Gestión de datos del launcher
+        </div>
         <div class="settings-elements-box">
             <div class="setting-text">
-                pour les jouer avec les proseceurs apple silicon 
+                Estas opciones te permiten reiniciar la configuración del launcher o eliminar todos los datos descargados.
+                <br><br>
+                <b>Reiniciar configuración:</b> Restablece todos los ajustes a sus valores predeterminados, pero mantiene los archivos del juego descargados.
+                <br>
+                <b>Eliminar todo:</b> Elimina toda la configuración y los archivos descargados del juego (assets, bibliotecas, instancias).
             </div>
+            <div class="settings-elements content-evenly">
+                <div class="reset-config-btn data-management-btn">
+                    <i class="fas fa-sync-alt"></i> Reiniciar configuración
+                </div>
+                <div class="delete-all-btn data-management-btn">
+                    <i class="fas fa-trash"></i> Eliminar todo
+                </div>
+            </div>
+        </div>
+    </div>
 
-            <div class="settings-elements content-evenly close-box">
-                <div class="close-launcher close-btn">Environnement INTEL</div>
-                <div class="close-none close-btn">Environnement SILICON</div>
-            </div>
-        </div> -->
+
     </div>
