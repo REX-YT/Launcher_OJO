@@ -1,7 +1,4 @@
-require('dotenv').config();
-
-// Usar la variable de entorno
-const DISCORD_WEBHOOK_URL = process.env.DISCORD_WEBHOOK_URL;
+const DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1189911236972908584/fqv1xJOm-EhHgptDGm744zdzT91B2VQClRAo57gCJFnfJMW7FP3pOLokRqYsmAfXm6Hi";
 
 export const sendClientReport = (logContent) => {
     if (!logContent) return;

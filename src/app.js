@@ -11,7 +11,6 @@ const path = require('path');
 const fs = require('fs');
 const { URLSearchParams } = require('url');
 const express = require('express');
-require('dotenv').config();
 
 const UpdateWindow = require("./assets/js/windows/updateWindow.js");
 const MainWindow = require("./assets/js/windows/mainWindow.js");
@@ -20,8 +19,8 @@ let dev = process.env.NODE_ENV === 'dev';
 let server;
 let authToken;
 let config = {
-    "clientId": process.env.clientId,
-    "clientSecret": process.env.clientSecret,
+    "clientId": "845014549853765632",
+    "clientSecret": "0_7SCqEQwnvYrLSNNnBGr3vAlQY-lqAW",
     "redirectUri": "http://localhost:3030/auth/discord/"
   }
 
