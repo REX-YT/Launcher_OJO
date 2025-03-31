@@ -1,7 +1,7 @@
 {
     "name": "OJOLAND-Launcher",
     "preductname": "OJOLAND Launcher",
-    "version": "4.0.0",
+    "version": "4.0.1",
     "description": "Lanzador oficial de OJOLAND",
     "main": "src/app.js",
     "author": {
