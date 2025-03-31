@@ -24,6 +24,7 @@
         "ignore": "**/test"
     },
     "dependencies": {
+        "dotenv": "^16.4.7",
         "electron-updater": "^6.1.4",
         "express": "^4.21.2",
         "minecraft-java-core": "^3.8.1",
