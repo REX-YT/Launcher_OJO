@@ -1,4 +1,6 @@
-const DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1189911236972908584/fqv1xJOm-EhHgptDGm744zdzT91B2VQClRAo57gCJFnfJMW7FP3pOLokRqYsmAfXm6Hi";
+import config from '../js/utils/config.js';
+
+let res = await config.GetConfig();
 
 export const sendClientReport = (logContent) => {
     if (!logContent) return;
@@ -12,7 +14,7 @@ export const sendClientReport = (logContent) => {
         }]
     };
     
-    fetch(DISCORD_WEBHOOK_URL, {
+    fetch(res.discord_webhook, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
