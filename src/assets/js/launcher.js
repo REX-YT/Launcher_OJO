@@ -20,6 +20,7 @@ import { logger, config, changePanel, database, popup,
     getUsername,
     setDiscordUsername,
     getDiscordUsername,
+    setPerformanceMode,
     setBackgroundMusic,
     setDiscordPFP, } from './utils.js';
 
@@ -39,13 +40,25 @@ class Launcher {
       console.log("Iniciando Launcher...");
 
         this.shortcut()
-        this.PantallaCarga();
         await setBackground()
      //   new Snowfall("snowCanvas"); // Inicia los copos de nieve
         if (process.platform == 'win32') this.initFrame();
         this.config = await config.GetConfig().then(res => res).catch(err => err);
         if (await this.config.error) return this.errorConnect()
         this.db = new database();
+        const configClient = await this.db.readData("configClient");
+
+        if (configClient.launcher_config.performance_mode) {
+          console.log("Modo de rendimiento activado");
+          document.body.classList.add('performance-mode');
+          
+          this.applyPerformanceModeOverrides();
+          
+          setPerformanceMode(true);
+        } else {
+          this.PantallaCarga();
+        }
+
         await this.initConfigClient();
         this.createPanels(Login, Home, Settings);
         setBackgroundMusic();
@@ -90,7 +103,7 @@ class Launcher {
       
       
       const configClient = this.db.readData('configClient');
-      if (configClient && configClient.launcher_config) {
+      if (configClient && configClient.launcher_config && configClient.launcher_config.performance_mode) {
         loadingOverlay.style.transition = 'none';
         loadingOverlay.style.opacity = '0';
         loadingOverlay.style.visibility = 'hidden';
@@ -359,11 +372,12 @@ class Launcher {
                     }
                 },
                 launcher_config: {
-                    download_multi: 5,
+                    download_multi: 10,
                     theme: 'auto',
                     closeLauncher: 'close-launcher',
                     intelEnabledMac: true,
-                    music_muted: false
+                    music_muted: false,
+                    performance_mode: false
                 }
             })
         }
@@ -731,6 +745,34 @@ class Launcher {
             changePanel('login');
         }
     }
-}
+
+    applyPerformanceModeOverrides() {
+      const panels = document.querySelectorAll('.panel');
+      panels.forEach(panel => {
+        panel.style.transition = 'none';
+        panel.style.transitionProperty = 'none';
+        panel.style.transitionDuration = '0s';
+        panel.style.transitionDelay = '0s';
+      });
+      
+      const settingsContainers = document.querySelectorAll('.container-settings');
+      settingsContainers.forEach(container => {
+        container.style.transition = 'none';
+        container.style.transform = 'none';
+      });
+      
+      const settingsBtns = document.querySelectorAll('.nav-settings-btn');
+      settingsBtns.forEach(btn => {
+        btn.style.transition = 'none';
+      });
+      
+      const settingsContent = document.querySelector('.settings-content');
+      if (settingsContent) {
+        settingsContent.style.transition = 'none';
+      }
+      
+      console.log("Aplicados ajustes específicos para el modo rendimiento");
+    }
+  }
 
 new Launcher().init();

@@ -527,6 +527,51 @@ input::-webkit-inner-spin-button {
   z-index: -1; /* Asegúrate de que esté detrás de todo */
 }
 
+body.performance-mode * {
+  transition: none !important;
+  animation: none !important;
+}
+
+body.performance-mode .panel {
+  transition-property: none !important;
+  transition-duration: 0s !important;
+  transition-delay: 0s !important;
+}
+
+body.performance-mode .panel.active {
+  transition-property: none !important;
+  transition-delay: 0s !important;
+}
+
+body.performance-mode .active-container-settings {
+  transform: translateX(0);
+  transition: none !important;
+}
+
+body.performance-mode .container-settings {
+  transition: none !important;
+  transition-property: none !important;
+  transition-duration: 0s !important;
+  transition-delay: 0s !important;
+}
+
+body.performance-mode .nav-settings-btn {
+  transition: none !important;
+}
+
+body.performance-mode .settings-content {
+  transition: none !important;
+}
+
+body.performance-mode .loading-overlay {
+  transition: none !important;
+}
+
+body.performance-mode .loading-overlay {
+  transition: none !important;
+}
+
+
 
 
 

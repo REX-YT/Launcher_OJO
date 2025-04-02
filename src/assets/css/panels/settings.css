@@ -554,110 +554,87 @@
     border: 4px solid var(--element-color);
 }
 
-
-/*******************************************************************************
- *                                                                             *
- * Credits tab                                                                 *
- *                                                                             *
- ******************************************************************************/
-
-
-.credits-container {
+.performance-mode-container {
     display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 5em;
-    padding: 1em;
+    align-items: center;
+    margin: 15px 0;
 }
 
-.credit {
-    flex-basis: 18em;
-    max-width: 18em;
-    flex-grow: 0;
-    flex-shrink: 1;
+.performance-mode-checkbox {
+    display: none;
+  }
+
+  .performance-mode-checkbox + label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 16px;
+    color: #ddd;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .performance-mode-checkbox + label::before {
+    content: "";
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    background: rgba(255, 255, 255, 0.1);
+    transition: all 0.3s ease;
+    display: inline-block;
+  }
+
+
+  .performance-mode-checkbox + label:hover::before {
+    border-color: #fff;
+  }
+
+
+  .performance-mode-checkbox:checked + label::before {
+    background: var(--box-button);
+    border-color: transparent;
+    box-shadow: 0 0 8px var(--box-button-hover);
+    content: "✔";
+    color: white;
     text-align: center;
-    padding: 14px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    border-radius: 10px;
-    background: rgba(0, 0, 0, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.18);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(5px);
-}
-  
-  .credit img {
-    width: 100px;
-    height: 100px;
-    border-radius: 50%;
-    object-fit: cover;
-    margin-bottom: 10px;
-  }
-  
-  .credit h3 {
-    margin: 10px 0;
-    font-size: 24px;
-  }
-  
-  .social-icons {
-    display: flex;
-    justify-content: center;
-    gap: 10px;
-  }
-  
-  .social-icons a {
-    font-size: 30px;
-    color: #fff;
-  }
-  
-  .social-icons i {
-    transition: color 0.3s ease;
-  }
-  
-  .social-icons a:hover i {
-    color: #979797;
-  }
-
-  .role {
-    font-size: 0.9em;
-  }
-
-  /* Terminos y condiciones */
-
-.info-container {
-  display: flex;
-  flex-direction: column;
-  margin-top: 20px;
-  background-color: #f8f9fabe;
-  border-radius: 5px;
-  padding: 10px;
-  color: black;
-  user-select: text;
-  width: 90%;
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(5px);
-}
-
-.info-panel {
-  padding: 20px;
-  background-color: #1e1e1e;
-  border-radius: 8px;
-  opacity: 0;
-  animation: fadeIn 0.3s forwards;
-  max-width: 90%;
-  margin: auto;
-  box-sizing: border-box;
-}
-
-.info-container p strong {
-    color: #333;
+    line-height: 22px;
     font-weight: bold;
+  }
+
+.performance-mode-info {
+    font-size: 1.1rem;
+    margin-top: 15px;
+    color: rgba(255, 255, 255, 0.8);
+    max-width: 90%;
 }
 
-.info-container p {
-    margin-bottom: 15px;
-    font-size: 14px;
-    color: #555;
+body.performance-mode .container-settings {
+    transition: none !important;
+    transition-property: none !important;
+    animation: none !important;
+}
+
+body.performance-mode .active-container-settings {
+    transform: translateX(0) !important;
+    opacity: 1 !important;
+    transition: none !important;
+    transition-property: none !important;
+    animation: none !important;
+}
+
+body.performance-mode .container-settings:not(.active-container-settings) {
+    transform: translateX(100%) !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    transition: none !important;
+    transition-property: none !important;
+    animation: none !important;
+}
+
+body.performance-mode * {
+    transition-duration: 0ms !important;
+    animation-duration: 0ms !important;
 }
 
 .data-management-btn {
@@ -698,4 +675,8 @@
   .data-management-btn i {
     margin-right: 8px;
     font-size: 1.1rem;
+  }
+
+  body.performance-mode .data-management-btn {
+    transition: none !important;
   }

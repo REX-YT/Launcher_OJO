@@ -3,7 +3,7 @@
  * @license CC-BY-NC 4.0 - https://creativecommons.org/licenses/by-nc/4.0
  */
 
-import { changePanel, accountSelect, database, Slider, config, setStatus, popup, appdata, setBackground } from '../utils.js'
+import { changePanel, accountSelect, database, Slider, config, setStatus, popup, appdata, setBackground, setPerformanceMode, isPerformanceModeEnabled } from '../utils.js'
 const { ipcRenderer } = require('electron');
 const os = require('os');
 const fs = require('fs');
@@ -20,30 +20,106 @@ class Settings {
         this.javaPath()
         this.resolution()
         this.launcher()
+
+        this.applyPerfModeOverridesIfNeeded();
+    }
+
+    applyPerfModeOverridesIfNeeded() {
+        if (isPerformanceModeEnabled()) {
+            console.log("Applying performance mode overrides for settings panel");
+            
+            const containers = document.querySelectorAll('.container-settings');
+            containers.forEach(container => {
+                container.style.transition = 'none';
+                container.style.transitionProperty = 'none';
+                container.style.transitionDuration = '0s';
+                
+                if (container.classList.contains('active-container-settings')) {
+                    container.style.transform = 'translateX(0)';
+                    container.style.opacity = '1';
+                    container.style.visibility = 'visible';
+                } else {
+                    container.style.transform = 'translateX(100%)';
+                    container.style.opacity = '0';
+                    container.style.visibility = 'hidden';
+                }
+            });
+            
+            document.querySelectorAll('.settings-elements-box, .titre-tab').forEach(el => {
+                el.style.transition = 'none';
+                el.style.animation = 'none';
+            });
+        }
     }
 
     navBTN() {
         document.querySelector('.nav-box').addEventListener('click', e => {
             if (e.target.classList.contains('nav-settings-btn')) {
-                let id = e.target.id
-
-                let activeSettingsBTN = document.querySelector('.active-settings-BTN')
-                let activeContainerSettings = document.querySelector('.active-container-settings')
+                let id = e.target.id;
+                let activeSettingsBTN = document.querySelector('.active-settings-BTN');
+                let activeContainerSettings = document.querySelector('.active-container-settings');
+                const performanceMode = isPerformanceModeEnabled();
 
                 if (id == 'save') {
                     if (activeSettingsBTN) activeSettingsBTN.classList.toggle('active-settings-BTN');
                     document.querySelector('#account').classList.add('active-settings-BTN');
 
-                    if (activeContainerSettings) activeContainerSettings.classList.toggle('active-container-settings');
-                    document.querySelector(`#account-tab`).classList.add('active-container-settings');
-                    return changePanel('home')
+                    if (activeContainerSettings) {
+                        if (performanceMode) {
+                            activeContainerSettings.classList.remove('active-container-settings');
+                            activeContainerSettings.style.opacity = '0';
+                            activeContainerSettings.style.transform = 'translateX(100%)';
+                            activeContainerSettings.style.visibility = 'hidden';
+                        } else {
+                            activeContainerSettings.classList.toggle('active-container-settings');
+                        }
+                    }
+
+                    if (performanceMode) {
+                        const accountTab = document.querySelector(`#account-tab`);
+                        accountTab.classList.add('active-container-settings');
+                        accountTab.style.opacity = '1';
+                        accountTab.style.transform = 'translateX(0)';
+                        accountTab.style.visibility = 'visible';
+                    } else {
+                        document.querySelector(`#account-tab`).classList.add('active-container-settings');
+                    }
+                    
+                    return changePanel('home');
                 }
 
                 if (activeSettingsBTN) activeSettingsBTN.classList.toggle('active-settings-BTN');
                 e.target.classList.add('active-settings-BTN');
 
-                if (activeContainerSettings) activeContainerSettings.classList.toggle('active-container-settings');
-                document.querySelector(`#${id}-tab`).classList.add('active-container-settings');
+                if (activeContainerSettings) {
+                    if (performanceMode) {
+                        activeContainerSettings.classList.remove('active-container-settings');
+                        activeContainerSettings.style.opacity = '0';
+                        activeContainerSettings.style.transform = 'translateX(100%)';
+                        activeContainerSettings.style.visibility = 'hidden';
+                        
+                        void activeContainerSettings.offsetWidth;
+                    } else {
+                        activeContainerSettings.classList.toggle('active-container-settings');
+                    }
+                }
+
+                if (performanceMode) {
+                    const newTab = document.querySelector(`#${id}-tab`);
+                    
+                    newTab.style.transition = 'none';
+                    newTab.style.transitionProperty = 'none';
+                    newTab.style.animation = 'none';
+                    
+                    void newTab.offsetWidth;
+                    
+                    newTab.classList.add('active-container-settings');
+                    newTab.style.opacity = '1';
+                    newTab.style.transform = 'translateX(0)';
+                    newTab.style.visibility = 'visible';
+                } else {
+                    document.querySelector(`#${id}-tab`).classList.add('active-container-settings');
+                }
             }
         })
     }
@@ -252,6 +328,35 @@ class Settings {
             configClient.launcher_config.download_multi = 10;
             await this.db.updateData('configClient', configClient);
         })
+
+        const performanceModeCheckbox = document.querySelector(".performance-mode-checkbox");
+        if (performanceModeCheckbox) {
+            let configClient = await this.db.readData('configClient');
+            performanceModeCheckbox.checked = configClient?.launcher_config?.performance_mode || false;
+            
+            performanceModeCheckbox.addEventListener("change", async () => {
+                let configClient = await this.db.readData('configClient');
+                configClient.launcher_config.performance_mode = performanceModeCheckbox.checked;
+                await this.db.updateData('configClient', configClient);
+                
+                let performanceModePopup = new popup();
+                let dialogResult = await new Promise((resolve) => {
+                    performanceModePopup.openDialog({
+                      title: performanceModeCheckbox.checked ? 'Modo de rendimiento activado' : 'Modo de rendimiento desactivado',
+                      content:
+                        "Para aplicar completamente los cambios del modo de rendimiento, es necesario reiniciar el launcher. Esto eliminará todas las transiciones y efectos visuales para mejorar el rendimiento. <br><br>¿Desea reiniciar el launcher ahora?",
+                      options: true,
+                      callback: resolve,
+                    });
+                  });
+            
+                  if (dialogResult === "cancel") {
+                    return;
+                  } else {
+                    ipcRenderer.send("app-restart");
+                  }
+            });
+        }
 
         let themeBox = document.querySelector(".theme-box");
         let theme = configClient?.launcher_config?.theme || "auto";

@@ -22,6 +22,100 @@ let musicSource = '';
 let isMusicPlaying = false;
 const fadeDuration = 1000;
 
+let performanceMode = false;
+
+async function setPerformanceMode(mode) {
+    performanceMode = mode;
+    
+    if (mode) {
+      document.body.classList.add('performance-mode');
+      console.log("Activando modo rendimiento");
+      
+      applyPerformanceModeStyleOverrides();
+      
+      const loadingOverlay = document.querySelector('.loading-overlay');
+      if (loadingOverlay && loadingOverlay.classList.contains('active')) {
+        console.log("Forcing immediate style updates for loading overlay in performance mode");
+        loadingOverlay.style.transition = 'none';
+      }
+    } else {
+      document.body.classList.remove('performance-mode');
+      
+      removePerformanceModeStyleOverrides();
+    
+    console.log(`Modo de rendimiento ${mode ? 'activado' : 'desactivado'}`);
+  }
+}
+
+function applyPerformanceModeStyleOverrides() {
+    const panels = document.querySelectorAll('.panel');
+    panels.forEach(panel => {
+      panel.style.transition = 'none';
+      panel.style.transitionProperty = 'none';
+      panel.style.transitionDuration = '0s';
+      panel.style.transitionDelay = '0s';
+      
+      if (panel.classList.contains('active')) {
+        panel.style.opacity = '1';
+        panel.style.maxHeight = '100vh';
+      }
+    });
+    
+    const settingsContainers = document.querySelectorAll('.container-settings');
+    settingsContainers.forEach(container => {
+      container.style.transition = 'none';
+      container.style.transitionProperty = 'none';
+      
+      if (container.classList.contains('active-container-settings')) {
+        container.style.opacity = '1';
+        container.style.transform = 'translateX(0)';
+      }
+    });
+    
+    const settingsBtns = document.querySelectorAll('.nav-settings-btn');
+    settingsBtns.forEach(btn => {
+      btn.style.transition = 'none';
+    });
+    
+    const settingsContent = document.querySelector('.settings-content');
+    if (settingsContent) {
+      settingsContent.style.transition = 'none';
+    }
+    
+    const loadingOverlay = document.querySelector('.loading-overlay');
+    if (loadingOverlay) {
+      loadingOverlay.style.transition = 'none';
+      if (loadingOverlay.classList.contains('active')) {
+        loadingOverlay.style.opacity = '1';
+        loadingOverlay.style.visibility = 'visible';
+      } else {
+        loadingOverlay.style.opacity = '0';
+        loadingOverlay.style.visibility = 'hidden';
+      }
+    }
+    
+    console.log("Applying direct performance mode style overrides");
+}
+
+function removePerformanceModeStyleOverrides() {
+    const panels = document.querySelectorAll('.panel');
+    panels.forEach(panel => {
+      panel.style.transition = '';
+      panel.style.transitionProperty = '';
+      panel.style.transitionDuration = '';
+      panel.style.transitionDelay = '';
+    });
+    
+    const settingsContainers = document.querySelectorAll('.container-settings');
+    settingsContainers.forEach(container => {
+      container.style.transition = '';
+      container.style.transitionProperty = '';
+      container.style.transform = '';
+    });
+    
+    console.log("Removing direct performance mode style overrides");
+  }
+  
 async function setBackground(theme) {
     if (typeof theme == 'undefined') {
         let databaseLauncher = new database();
@@ -45,13 +139,43 @@ async function setBackground(theme) {
     body.style.backgroundSize = 'cover';
 }
 
-async function changePanel(id) {
+function changePanel(id) {
     let panel = document.querySelector(`.${id}`);
-    let active = document.querySelector(`.active`)
-    if (active) active.classList.toggle("active");
-    panel.classList.add("active");
+    let active = document.querySelector(`.active`);
+    
+    if (performanceMode) {
+        if (active) {
+            active.classList.remove("active");
+            active.style.opacity = "0";
+            active.style.maxHeight = "0";
+            active.style.visibility = "hidden";
+            active.style.transition = "none";
+            active.style.transitionProperty = "none";
+        }
+        panel.classList.add("active");
+        panel.style.transition = "none";
+        panel.style.transitionProperty = "none";
+        panel.style.opacity = "1";
+        panel.style.maxHeight = "100vh";
+        panel.style.visibility = "visible";
+    } else {
+        if (active) {
+            active.classList.remove("active");
+            active.style.transition = "";
+            active.style.opacity = "";
+            active.style.maxHeight = "";
+            active.style.visibility = "";
+        }
+        panel.classList.add("active");
+        panel.style.transition = "";
+        panel.style.visibility = "visible";
+    }
 }
 
+function isPerformanceModeEnabled() {
+    return performanceMode;
+  }
+  
 async function appdata() {
     return await ipcRenderer.invoke('appData').then(path => path)
 }
@@ -331,6 +455,8 @@ export {
     fadeOutAudio as fadeOutAudio,
     fadeInAudio as fadeInAudio,
     setBackgroundMusic as setBackgroundMusic,
+    setPerformanceMode as setPerformanceMode,
+    isPerformanceModeEnabled as isPerformanceModeEnabled,
     pkg as pkg,
     setStatus as setStatus
 }
