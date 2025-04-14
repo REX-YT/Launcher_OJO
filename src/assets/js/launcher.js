@@ -30,6 +30,7 @@ const { AZauth, Microsoft, Mojang } = require('minecraft-java-core');
 // libs
 const { ipcRenderer } = require('electron');
 const fs = require('fs');
+const os = require('os');
 let dev = process.env.NODE_ENV === "dev";
 
 class Launcher {
@@ -42,11 +43,17 @@ class Launcher {
         this.shortcut()
         await setBackground()
      //   new Snowfall("snowCanvas"); // Inicia los copos de nieve
-        if (process.platform == 'win32') this.initFrame();
+        this.initFrame();
         this.config = await config.GetConfig().then(res => res).catch(err => err);
         if (await this.config.error) return this.errorConnect()
         this.db = new database();
         const configClient = await this.db.readData("configClient");
+        const isFirstRun = !configClient;
+
+            
+    if (isFirstRun) {
+      await this.initConfigClient();
+    } else {
 
         if (configClient.launcher_config.performance_mode) {
           console.log("Modo de rendimiento activado");
@@ -59,7 +66,8 @@ class Launcher {
           this.PantallaCarga();
         }
 
-        await this.initConfigClient();
+     }
+     
         this.createPanels(Login, Home, Settings);
         setBackgroundMusic();
         await this.verifyDiscordAccount();
@@ -325,27 +333,26 @@ class Launcher {
     }
 
     initFrame() {
-        console.log('Initializing Frame...')
-        document.querySelector('.frame').classList.toggle('hide')
-        document.querySelector('.dragbar').classList.toggle('hide')
-
-        document.querySelector('#minimize').addEventListener('click', () => {
-            ipcRenderer.send('main-window-minimize');
+      const platform = os.platform() === 'darwin' ? "darwin" : "other";
+      
+      document.querySelector(`.${platform} .frame`).classList.toggle('hide');
+      
+      if (platform === "darwin") document.querySelector(".dragbar").classList.toggle("hide");
+  
+      const minimizeBtn = document.querySelector(`.${platform} #minimize`);
+      const closeBtn = document.querySelector(`.${platform} #close`);
+  
+      if (minimizeBtn) {
+        minimizeBtn.addEventListener("click", () => {
+          ipcRenderer.send("main-window-minimize");
         });
-
-        let maximized = false;
-        let maximize = document.querySelector('#maximize')
-        maximize.addEventListener('click', () => {
-            if (maximized) ipcRenderer.send('main-window-maximize')
-            else ipcRenderer.send('main-window-maximize');
-            maximized = !maximized
-            maximize.classList.toggle('icon-maximize')
-            maximize.classList.toggle('icon-restore-down')
+      }
+  
+      if (closeBtn) {
+        closeBtn.addEventListener("click", async () => {
+          ipcRenderer.send('main-window-close');
         });
-
-        document.querySelector('#close').addEventListener('click', () => {
-            ipcRenderer.send('main-window-close');
-        })
+      }
     }
 
     async initConfigClient() {

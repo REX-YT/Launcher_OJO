@@ -2,11 +2,11 @@
     --icon-unselected: #707070;
     --box: #1A1A1A;
     --box-hover: #202020;
-    --box-button: #0078bd;
-    --box-button-hover: #053e8a;
-    --box-button-hover-2: #001f47;
-    --box-button-gradient-1: 	#00FFFF;
-    --box-button-gradient-2: 	#0096FF;
+    --box-button: #2e2b2b;
+    --box-button-hover: #340401;
+    --box-button-hover-2: #330905;
+    --box-button-gradient-1: 	#ff0000;
+    --box-button-gradient-2: 	#f62b2b;
 }
 .login .container {
     display: flex;
@@ -88,7 +88,7 @@
 .input-login .email:hover,
 .input-login .password:hover,
 .A2F:hover {
-    border: 2px solid #4A9DEC;
-    box-shadow: 0px 0px 0px 7px rgb(74, 157, 236, 20%);
+    border: 2px solid #f98c8a;
+    box-shadow: 0px 0px 0px 7px rgba(38, 39, 39, 0.2);
     background-color: white;
 }
