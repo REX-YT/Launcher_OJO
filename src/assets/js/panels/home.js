@@ -22,6 +22,7 @@ class Home {
         this.startButtonManager()
         document.querySelector('.settings-btn').addEventListener('click', e => discordAccount() && changePanel('settings'));
         this.jugadorTooltip();
+        this.GuiElementsTooltip();
     }
 
     async news() {
@@ -275,6 +276,203 @@ class Home {
         instanceCloseBTN.addEventListener('click', () => instancePopup.style.display = 'none')
     }
 
+    addTooltipToElement(element, text) {
+        if (!window.tooltipManager) {
+            this.initializeTooltipManager();
+        }
+        
+        element.addEventListener('mouseenter', (e) => {
+            window.tooltipManager.showTooltip(element, text);
+        });
+
+        element.addEventListener('mouseleave', (e) => {
+            window.tooltipManager.hideTooltip(element);
+        });
+        
+        const observer = new MutationObserver((mutations) => {
+            for (const mutation of mutations) {
+                if (mutation.type === 'childList' && 
+                    Array.from(mutation.removedNodes).some(node => 
+                        node === element || (node.contains && node.contains(element))
+                    )) {
+                    window.tooltipManager.hideTooltip(element);
+                    observer.disconnect();
+                }
+            }
+        });
+        
+        if (element.parentNode) {
+            observer.observe(element.parentNode, { childList: true, subtree: true });
+        }
+    }
+
+    jugadorTooltip() {
+        const playerOptions = document.querySelector('.player-options');
+        
+        if (!window.tooltipManager) {
+            this.initializeTooltipManager();
+        }
+        
+        if (playerOptions) {
+            let tooltipActive = false;
+            
+            playerOptions.addEventListener('mouseenter', async (e) => {
+                if (tooltipActive) return;
+                tooltipActive = true;
+                
+                try {
+                    const username = await getUsername();
+                    if (username) {
+                        window.tooltipManager.showTooltip(playerOptions, username);
+                    }
+                } catch (error) {
+                    console.error('Error al obtener el nombre de usuario:', error);
+                }
+            });
+            
+            playerOptions.addEventListener('mouseleave', (e) => {
+                tooltipActive = false;
+                window.tooltipManager.hideTooltip(playerOptions);
+            });
+            
+            playerOptions.style.pointerEvents = 'auto';
+        }
+    }
+
+    initializeTooltipManager() {
+        if (window.tooltipManager) return;
+
+        window.tooltipManager = {
+            activeTooltips: new Map(),
+            
+            showTooltip(element, text) {
+                this.hideTooltip(element);
+                
+                const tooltip = document.createElement('div');
+                tooltip.classList.add('tooltip');
+                tooltip.innerHTML = text;
+                document.body.appendChild(tooltip);
+                
+                const rect = element.getBoundingClientRect();
+                tooltip.style.left = `${rect.right + window.scrollX + 10}px`;
+                tooltip.style.top = `${rect.top + window.scrollY + rect.height / 2 - tooltip.offsetHeight / 2}px`;
+                
+                tooltip.style.zIndex = '10000';
+                
+                this.activeTooltips.set(element, tooltip);
+                
+                tooltip.style.opacity = '1';
+            },
+            
+            hideTooltip(element) {
+                const tooltip = this.activeTooltips.get(element);
+                if (tooltip) {
+                    tooltip.style.opacity = '0';
+                    this.activeTooltips.delete(element);
+                    
+                    setTimeout(() => {
+                        if (document.body.contains(tooltip)) {
+                            document.body.removeChild(tooltip);
+                        }
+                    }, 200);
+                }
+            },
+            
+            hideAllTooltips() {
+                this.activeTooltips.forEach((tooltip, element) => {
+                    this.hideTooltip(element);
+                });
+            },
+            
+            cleanupOrphanedTooltips() {
+                document.querySelectorAll('.tooltip').forEach(tooltip => {
+                    if (!Array.from(this.activeTooltips.values()).includes(tooltip)) {
+                        if (document.body.contains(tooltip)) {
+                            document.body.removeChild(tooltip);
+                        }
+                    }
+                });
+            }
+        };
+        
+        document.addEventListener('mouseleave', () => {
+            window.tooltipManager.hideAllTooltips();
+        });
+        
+        window.addEventListener('blur', () => {
+            window.tooltipManager.hideAllTooltips();
+        });
+        
+        setInterval(() => {
+            window.tooltipManager.cleanupOrphanedTooltips();
+        }, 5000);
+        
+        document.addEventListener('click', () => {
+            window.tooltipManager.hideAllTooltips();
+        });
+        
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'hidden') {
+                window.tooltipManager.hideAllTooltips();
+            }
+        });
+    }
+
+    GuiElementsTooltip() {
+        if (!window.tooltipManager) {
+            this.initializeTooltipManager();
+        }
+        
+        const instanceSelectButton = document.querySelector('.instance-select');
+        if (instanceSelectButton) {
+            this.addTooltipToElement(instanceSelectButton, "Seleccionar instancia");
+        }
+        
+        const musicButton = document.querySelector('.music-btn');
+        if (musicButton) {
+            this.addDynamicTooltipToElement(musicButton, () => 
+                musicButton.classList.contains('icon-speaker-on') ? 
+                    "Silenciar música" : "Activar música"
+            );
+        }
+        
+        const settingsButton = document.querySelector('.settings-btn');
+        if (settingsButton) {
+            this.addTooltipToElement(settingsButton, "Configuración");
+        }
+    }
+
+    addDynamicTooltipToElement(element, textCallback) {
+        if (!window.tooltipManager) {
+            this.initializeTooltipManager();
+        }
+        
+        element.addEventListener('mouseenter', (e) => {
+            const text = typeof textCallback === 'function' ? textCallback() : textCallback;
+            window.tooltipManager.showTooltip(element, text);
+        });
+
+        element.addEventListener('mouseleave', (e) => {
+            window.tooltipManager.hideTooltip(element);
+        });
+        
+        const observer = new MutationObserver((mutations) => {
+            for (const mutation of mutations) {
+                if (mutation.type === 'childList' && 
+                    Array.from(mutation.removedNodes).some(node => 
+                        node === element || (node.contains && node.contains(element))
+                    )) {
+                    window.tooltipManager.hideTooltip(element);
+                    observer.disconnect();
+                }
+            }
+        });
+        
+        if (element.parentNode) {
+            observer.observe(element.parentNode, { childList: true, subtree: true });
+        }
+    }
+
     async startGame() {
         let launch = new Launch()
         let configClient = await this.db.readData('configClient')
@@ -410,41 +608,5 @@ class Home {
         return { year: year, month: allMonth[month - 1], day: day }
     }
 
-    jugadorTooltip() {
-        const playerOptions = document.querySelector('.player-options');
-        const playerHead = document.querySelector('.player-head');
-
-        const showTooltip = async (element) => {
-            const username = await getUsername();
-            let tooltip = document.createElement('div');
-            tooltip.classList.add('tooltip');
-            tooltip.innerHTML = username;
-            document.body.appendChild(tooltip);
-            let rect = element.getBoundingClientRect();
-            tooltip.style.left = `${rect.right + window.scrollX + 10}px`;
-            tooltip.style.top = `${rect.top + window.scrollY + rect.height / 2 - tooltip.offsetHeight / 2}px`;
-            element.tooltip = tooltip;
-            requestAnimationFrame(() => {
-                tooltip.style.opacity = '1';
-            });
-        };
-
-        const hideTooltip = (element) => {
-            if (element.tooltip) {
-                element.tooltip.style.opacity = '0';
-                setTimeout(() => {
-                    if (element.tooltip) {
-                        document.body.removeChild(element.tooltip);
-                        element.tooltip = null;
-                    }
-                }, 200);
-            }
-        };
-
-        playerOptions.addEventListener('mouseenter', () => showTooltip(playerOptions));
-        playerOptions.addEventListener('mouseleave', () => hideTooltip(playerOptions));
-        playerHead.addEventListener('mouseenter', () => showTooltip(playerHead));
-        playerHead.addEventListener('mouseleave', () => hideTooltip(playerHead));
-    }
 }
 export default Home;
