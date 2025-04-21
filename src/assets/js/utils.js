@@ -375,9 +375,45 @@ async function discordAccount() {
         discordUsernameText.textContent = discordUsername;
         discordPFPElement.src = discordPFP;
         discordLogoutBtn.addEventListener('click', async () => {
+            const logoutPopup = new popup();
+            const result = await new Promise(resolve => {
+                logoutPopup.openDialog({
+                    title: 'Cerrar sesión de Discord',
+                    content: '¿Estás seguro de que quieres cerrar sesión de Discord? El launcher se reiniciará.',
+                    options: true,
+                    callback: resolve
+                });
+            });
+
+            if (result === 'cancel') return;
+
+            const processingPopup = new popup();
+            processingPopup.openPopup({
+                title: 'Cerrando sesión',
+                content: 'Por favor, espera mientras se cierra la sesión...',
+                color: 'var(--color)'
+            });
+
+            try {
             discordLogoutBtn.style.display = 'none';
+            
+            await new Promise(resolve => setTimeout(resolve, 500));
+
             logOutDiscord();
+        } catch (error) {
+            console.error('Error al cerrar sesión de Discord:', error);
+            
+            processingPopup.closePopup();
+            const errorPopup = new popup();
+            errorPopup.openPopup({
+                title: 'Error',
+                content: `Ha ocurrido un error al cerrar sesión: ${error.message}`,
+                color: 'red',
+                options: true
+            });
+        }
         });
+
     } else {
         discordAccountManagerTitle.style.display = 'none';
         discordAccountManagerPanel.style.display = 'none';

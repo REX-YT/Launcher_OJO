@@ -16,8 +16,7 @@ class Home {
         this.db = new database();
         this.news()
         this.socialLick()
-        this.notification()
-        this.startNotificationCheck()
+        this.startrandomNotis()
         this.instancesSelect()
         this.startButtonManager()
         document.querySelector('.settings-btn').addEventListener('click', e => discordAccount() && changePanel('settings'));
@@ -106,25 +105,68 @@ class Home {
             })
         });
     }
+    
 
     async notification() { 
 
-        let notification = document.querySelector('.message-container');
-        let notificationIcon = document.querySelector('.message-icon');
-        let notificationTitle = document.querySelector('.message-title');
-        let notificationContent = document.querySelector('.message-content');
+        const tips = [
+            {
+                title: '¡Atencion!',
+                message: 'Usa /sethome para guardar tu ubicación favorita.',
+                color: '--notification-green',
+                icon: 'assets/images/notification/info.png'
+            },
+            {
+                title: 'Consejo de seguridad',
+                message: 'No compartas tu contraseña con nadie. El staff nunca la pedirá.',
+                color: '--notification-red',
+                icon: 'assets/images/notification/exclamation.png'
+            },
+            {
+                title: 'Evita sanciones',
+                message: 'Lee las reglas del servidor en el Discord.',
+                color: '--notification-red',
+                icon: 'assets/images/notification/exclamation.png'
+            },
+            {
+                title: 'Eventos activos',
+                message: 'Revisa el Discord para enterarte de los próximos eventos del servidor.',
+                color: '--notification-blue',
+                icon: 'assets/images/notification/bell.png'
+            },
+            {
+                title: 'Protege tu base',
+                message: 'Recuerda usar /flanmenu o una azada de oro para proteger tu zona.',
+                color: '--notification-yellow',
+                icon: 'assets/images/notification/exclamation2.png'
+            }
+        ];        
 
-        let colorRed = getComputedStyle(document.documentElement).getPropertyValue('--notification-red');
-        let colorGreen = getComputedStyle(document.documentElement).getPropertyValue('--notification-green');
-        let colorBlue = getComputedStyle(document.documentElement).getPropertyValue('--notification-blue');
-        let colorYellow = getComputedStyle(document.documentElement).getPropertyValue('--notification-yellow');
-
-         notificationTitle.innerHTML = '¡Atención!';
-         notificationContent.innerHTML = "Si cierras sesión de la cuenta de discord el launcher se reiniciará.";
-         notification.style.background = colorYellow;
-         notificationIcon.src = 'assets/images/notification/bell.png';
-        await this.showNotification()
+        const randomIndex = Math.floor(Math.random() * tips.length);
+        const tip = tips[randomIndex];
+    
+        const notification = document.querySelector('.message-container');
+        const notificationIcon = document.querySelector('.message-icon');
+        const notificationTitle = document.querySelector('.message-title');
+        const notificationContent = document.querySelector('.message-content');
+    
+        const color = getComputedStyle(document.documentElement).getPropertyValue(tip.color);
+    
+        notificationTitle.innerHTML = tip.title;
+        notificationContent.innerHTML = tip.message;
+        notification.style.background = color;
+        notificationIcon.src = tip.icon;
+    
+        await this.showNotification();
     }
+
+    startrandomNotis() {
+        this.notification(); // Muestra uno al inicio
+        setInterval(() => {
+            this.notification();
+        }, 30000); // cada 30 segundos, cambia según tu gusto
+    }
+    
 
     async showNotification() {
         let notification = document.querySelector('.message-container');
@@ -144,21 +186,6 @@ class Home {
         await new Promise(resolve => setTimeout(resolve, 1000));
         notification.style.visibility = 'hidden';
         notification.style.display = 'none';
-    }
-
-    startNotificationCheck() {
-        this.intervalId = setInterval(() => {
-            this.notification();
-        }, 60000);
-        console.log('Comprobación de notificación programada iniciada.');
-    }
-
-    stopNotificationCheck() {
-        if (this.intervalId) {
-            clearInterval(this.intervalId);
-            this.intervalId = null;
-        }
-        console.log('Se ha detenido la comprobación programada de notificaciones.');
     }
 
     async startButtonManager() {
