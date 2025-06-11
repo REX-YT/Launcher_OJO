@@ -431,18 +431,20 @@ async function logOutDiscord() {
 }
 
 async function setStatus(opt) {
+    let instanceIcon = document.querySelector('.server-status-icon')
     let nameServerElement = document.querySelector('.server-status-name')
     let statusServerElement = document.querySelector('.server-status-text')
     let playersOnline = document.querySelector('.status-player-count .player-count')
 
     if (!opt) {
+        instanceIcon.src = './assets/images/icon.png'
         statusServerElement.classList.add('red')
         statusServerElement.innerHTML = `Apagado - 0 ms`
         document.querySelector('.status-player-count').classList.add('red')
         playersOnline.innerHTML = '0'
         return
     }
-
+    instanceIcon.src = opt.icon || './assets/images/icon.png'
     let { ip, port, nameServer } = opt
     nameServerElement.innerHTML = nameServer
     const options = { query: true }; 
