@@ -213,13 +213,13 @@ class Home {
         let instanceSelect = instancesList.find(i => i.name == configClient?.instance_selct) ? configClient?.instance_selct : null
 
         let instanceBTN = document.querySelector('.play-instance')
+        let instanteBTNInstance = document.querySelector('.instance-select')
         let instancePopup = document.querySelector('.instance-popup')
         let instancesListPopup = document.querySelector('.instances-List')
         let instanceCloseBTN = document.querySelector('.close-popup')
 
         if (instancesList.length === 1) {
             document.querySelector('.instance-select').style.display = 'none'
-            instanceBTN.style.paddingRight = '0'
         }
 
         if (!instanceSelect) {
@@ -260,14 +260,14 @@ class Home {
                 configClient.instance_selct = newInstanceSelect
                 await this.db.updateData('configClient', configClient)
                 instanceSelect = instancesList.filter(i => i.name == newInstanceSelect)
-                instancePopup.style.display = 'none'
+               instancePopup.classList.remove('show')
                 let instance = await config.getInstanceList()
                 let options = instance.find(i => i.name == configClient.instance_selct)
                 await setStatus(options.status)
             }
         })
 
-        instanceBTN.addEventListener('click', async e => {
+        instanteBTNInstance.addEventListener('click', async e => {
             let configClient = await this.db.readData('configClient')
             let instanceSelect = configClient.instance_selct
             let auth = await this.db.readData('accounts', configClient.account_selected)
@@ -294,13 +294,15 @@ class Home {
                     }
                 }
 
-                instancePopup.style.display = 'flex'
+                instancePopup.classList.add('show')
             }
-
-            if (!e.target.classList.contains('instance-select')) this.startGame()
         })
 
-        instanceCloseBTN.addEventListener('click', () => instancePopup.style.display = 'none')
+        instanceBTN.addEventListener('click', () => {
+          this.startGame()
+        });
+
+        instanceCloseBTN.addEventListener('click', () => instancePopup.classList.remove('show'));
     }
 
     addTooltipToElement(element, text) {
