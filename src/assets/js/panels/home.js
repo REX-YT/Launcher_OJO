@@ -272,7 +272,7 @@ class Home {
             let instanceSelect = configClient.instance_selct
             let auth = await this.db.readData('accounts', configClient.account_selected)
 
-            if (e.target.classList.contains('instance-select')) {
+            if (e.target.classList.contains('instance-select') || e.target.classList.contains('grid-icon')) {
                 instancesListPopup.innerHTML = ''
                 for (let instance of instancesList) {
                     if (instance.whitelistActive) {
