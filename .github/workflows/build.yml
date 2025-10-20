@@ -50,8 +50,15 @@ jobs:
       - name: Install Dependencies
         run: npm ci
 
-      - name: Debug environment (opcional)
-        run: echo "API_TOKEN length: ${#API_TOKEN}"
+      - name: Check API_TOKEN presence
+        run: |
+          if [ -z "$API_TOKEN" ]; then
+            echo "❌ API_TOKEN is missing"
+            exit 1
+          else
+            echo "✅ API_TOKEN detected (hidden for security)"
+          fi
+        shell: bash
         env:
           API_TOKEN: ${{ secrets.API_TOKEN }}
 
