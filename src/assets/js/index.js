@@ -3,6 +3,10 @@ const pkg = require('../package.json');
 const os = require('os');
 import { config, database } from './utils.js';
 const nodeFetch = require("node-fetch");
+require('dotenv').config();
+
+
+const API_TOKEN = process.env.API_TOKEN || '';
 
 class Splash {
     constructor() {
@@ -24,11 +28,16 @@ class Splash {
 
     async fetchSplashes() {
         try {
-            const url = `${pkg.url}launcher/config-launcher/splashes.json`;
-            const response = await nodeFetch(url, { timeout: 5000 });
-            if (!response.ok) throw new Error('Network response was not ok');
-            const data = await response.json();
-            return data;
+            const url = `${pkg.url}/api/getSplashes.php`;
+                        const res = await nodeFetch(url, {
+                headers: { 'X-Launcher-Token': API_TOKEN }
+            });
+            if (res.ok) {
+                return await res.json();
+            } else {
+                throw new Error(`HTTP ${res.status}`);
+            }
+
         } catch (error) {
             console.error('Error al cagar los splashes, usando los default:', error);
             return null;

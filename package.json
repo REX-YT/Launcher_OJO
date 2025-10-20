@@ -1,7 +1,7 @@
 {
     "name": "OJOLAND-Launcher",
     "preductname": "OJOLAND Launcher",
-    "version": "4.0.11",
+    "version": "4.1.2",
     "description": "Lanzador oficial de OJOLAND",
     "main": "src/app.js",
     "author": {
@@ -24,7 +24,7 @@
         "ignore": "**/test"
     },
     "dependencies": {
-        "dotenv": "^16.4.7",
+        "dotenv": "^16.6.1",
         "electron-updater": "^6.1.4",
         "express": "^4.21.2",
         "minecraft-java-core": "^3.8.1",

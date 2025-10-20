@@ -1,27 +1,36 @@
 /**
- * @author Luuxis
+ * @author DevRex
  * @license CC-BY-NC 4.0 - https://creativecommons.org/licenses/by-nc/4.0
  */
 
+require('dotenv').config();
 const pkg = require('../package.json');
 const nodeFetch = require("node-fetch");
 const convert = require('xml-js');
 let url = pkg.user ? `${pkg.url}/${pkg.user}` : pkg.url
 
-let config = `${url}/launcher/config-launcher/config.json`;
-let news = `${url}/launcher/news-launcher/news.json`;
+let apiConfig = `${url}/api/getConfig.php`;
+let apiNews = `${url}/api/getNews.php`;
+
+//Token
+const API_TOKEN = process.env.API_TOKEN || '';
+
 
 class Config {
-    GetConfig() {
-        return new Promise((resolve, reject) => {
-            nodeFetch(config).then(async config => {
-                if (config.status === 200) return resolve(config.json());
-                else return reject({ error: { code: config.statusText, message: 'Servidor no accesible' } });
-            }).catch(error => {
-                return reject({ error });
-            })
-        })
+    async GetConfig() {
+        try {
+            const res = await nodeFetch(apiConfig, {
+                headers: {
+                    'X-Launcher-Token': API_TOKEN
+                }
+            });
+            if (!res.ok) throw new Error(`Error HTTP ${res.status}`);
+            return await res.json();
+        } catch (error) {
+            return { error: { message: 'Servidor no accesible', details: error.message } };
+        }
     }
+
 
     async getInstanceList() {
         let urlInstance = `${url}/files`
@@ -38,39 +47,42 @@ class Config {
     }
 
     async getNews() {
-        let config = await this.GetConfig() || {}
+        const config = await this.GetConfig() || {};
 
+        // Si hay un feed RSS en config.json
         if (config.rss) {
-            return new Promise((resolve, reject) => {
-                nodeFetch(config.rss).then(async config => {
-                    if (config.status === 200) {
-                        let news = [];
-                        let response = await config.text()
-                        response = (JSON.parse(convert.xml2json(response, { compact: true })))?.rss?.channel?.item;
+            try {
+                const res = await nodeFetch(config.rss);
+                if (!res.ok) throw new Error(`Error HTTP ${res.status}`);
+                let response = await res.text();
+                let parsed = JSON.parse(convert.xml2json(response, { compact: true }));
+                let items = parsed?.rss?.channel?.item;
+                if (!Array.isArray(items)) items = [items];
 
-                        if (!Array.isArray(response)) response = [response];
-                        for (let item of response) {
-                            news.push({
-                                title: item.title._text,
-                                content: item['content:encoded']._text,
-                                author: item['dc:creator']._text,
-                                publish_date: item.pubDate._text
-                            })
-                        }
-                        return resolve(news);
-                    }
-                    else return reject({ error: { code: config.statusText, message: 'Servidor no accesible' } });
-                }).catch(error => reject({ error }))
-            })
-        } else {
-            return new Promise((resolve, reject) => {
-                nodeFetch(news).then(async config => {
-                    if (config.status === 200) return resolve(config.json());
-                    else return reject({ error: { code: config.statusText, message: 'Servidor no accesible' } });
-                }).catch(error => {
-                    return reject({ error });
-                })
-            })
+                return items.map(item => ({
+                    title: item.title._text,
+                    content: item['content:encoded']._text,
+                    author: item['dc:creator']._text,
+                    publish_date: item.pubDate._text
+                }));
+            } catch (error) {
+                console.error(error);
+                return [];
+            }
+        }
+
+        // Si no hay RSS, usar la API por defecto
+        try {
+            const res = await nodeFetch(apiNews, {
+                headers: {
+                    'X-Launcher-Token': API_TOKEN
+                }
+            });
+            if (!res.ok) throw new Error(`Error HTTP ${res.status}`);
+            return await res.json();
+        } catch (error) {
+            console.error(error);
+            return [];
         }
     }
 }
