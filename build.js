@@ -7,9 +7,20 @@ const png2icons = require('png2icons');
 const Jimp = require('jimp');
 
 const { preductname } = require('./package.json');
+const configPath = "src/assets/js/utils/config.js";
 
 class Index {
     async init() {
+
+    if (process.env.API_TOKEN && fs.existsSync(configPath)) {
+        console.log("🔐 Injecting API_TOKEN into config.js before build");
+        let code = fs.readFileSync(configPath, "utf8");
+        code = code.replace(/process\.env\.API_TOKEN\s*\|\|\s*''/, `'${process.env.API_TOKEN}'`);
+        fs.writeFileSync(configPath, code, "utf8");
+    } else {
+        console.warn("⚠️ No API_TOKEN found or config.js missing");
+    }
+
         this.obf = true
         this.Fileslist = []
         process.argv.forEach(async val => {
