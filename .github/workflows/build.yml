@@ -1,4 +1,4 @@
-# module du helios launcher
+# Automatico para crear versiones de lanzador - DevRex
 name: Launcher Build
 on:
   push:
@@ -54,5 +54,6 @@ jobs:
       - name: Build
         env:
           GH_TOKEN: ${{ secrets.github_token }}
+          API_TOKEN: ${{ secrets.API_TOKEN }}
         run: npm run build
         shell: bash
