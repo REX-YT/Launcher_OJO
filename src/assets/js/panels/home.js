@@ -535,7 +535,12 @@ class Home {
 
             ignored: [...options.ignored],
 
-            javaPath: configClient.java_config.java_path,
+            java: {
+                path: configClient.java_config.java_path,
+            },
+
+            JVM_ARGS:  options.jvm_args ? options.jvm_args : [],
+            GAME_ARGS: options.game_args ? options.game_args : [],
 
             screen: {
                 width: configClient.game_config.screen_size.width,
@@ -555,77 +560,119 @@ class Home {
         progressBar.style.display = "";
         ipcRenderer.send('main-window-progress-load')
 
-        launch.on('extract', extract => {
-            ipcRenderer.send('main-window-progress-load')
-            console.log(extract);
+      
+    // Progreso de descarga
+    launch.on('progress', (progress, size) => {
+        if (!size || size <= 0) return;
+        const percent = ((progress / size) * 100).toFixed(0);
+        infoStarting.innerHTML = `Descargando ${percent}%`;
+        ipcRenderer.send('main-window-progress', { progress, size });
+        progressBar.value = progress;
+        progressBar.max = size;
+    });
+
+    // Verificación de archivos
+    launch.on('check', (progress, size) => {
+        if (!size || size <= 0) return;
+        const percent = ((progress / size) * 100).toFixed(0);
+        infoStarting.innerHTML = `Verificación ${percent}%`;
+        ipcRenderer.send('main-window-progress', { progress, size });
+        progressBar.value = progress;
+        progressBar.max = size;
+    });
+
+    // Tiempo estimado
+    launch.on('estimated', (time) => {
+        if (!isFinite(time) || time <= 0) return;
+        let hours = Math.floor(time / 3600);
+        let minutes = Math.floor((time % 3600) / 60);
+        let seconds = Math.floor(time % 60);
+        console.log(`[OJOLAND-Launcher]: ${hours}h ${minutes}m ${seconds}s`);
+    });
+
+    // Velocidad con limitador (una vez por segundo)
+    let lastSpeedLog = 0;
+    launch.on('speed', (speed) => {
+        const now = Date.now();
+        if (now - lastSpeedLog < 1000) return;
+        lastSpeedLog = now;
+        if (!isFinite(speed) || speed <= 0) return;
+        console.log(`[OJOLAND-Launcher]: ${(speed / 1067008).toFixed(2)} Mb/s`);
+    });
+
+    // Parches
+    launch.on('patch', patch => {
+        console.log(patch);
+        ipcRenderer.send('main-window-progress-load');
+        infoStarting.innerHTML = `Parche en progreso...`;
+    });
+
+    // Extracción
+    launch.on('extract', extract => {
+        ipcRenderer.send('main-window-progress-load');
+        console.log(extract);
+    });
+
+    // Cuando inicia el juego
+    launch.on('data', (e) => {
+        progressBar.style.display = "none";
+        if (configClient.launcher_config.closeLauncher == 'close-launcher') {
+            ipcRenderer.send("main-window-hide");
+        }
+        new logger('Minecraft', '#36b030');
+        ipcRenderer.send('main-window-progress-load');
+        infoStarting.innerHTML = `Empezando...`;
+        console.log(e);
+    });
+
+    // Cuando se cierra el juego
+    launch.on('close', code => {
+        if (configClient.launcher_config.closeLauncher == 'close-launcher') {
+            ipcRenderer.send("main-window-show");
+        }
+        ipcRenderer.send('main-window-progress-reset');
+        infoStartingBOX.style.display = "none";
+        playInstanceBTN.style.display = "flex";
+        infoStarting.innerHTML = `Verificación`;
+        new logger(pkg.name, '#7289da');
+        console.log('Close');
+    });
+
+    // Manejo de errores
+    launch.on('error', err => {
+        // Filtrar errores comunes de red
+        const msg = err?.message || err?.error || '';
+        if (
+            msg.includes('ERR_CONNECTION_RESET') ||
+            msg.includes('network error') ||
+            msg.includes('The user aborted a request')
+        ) {
+            console.warn('[OJOLAND-Launcher]: Problema de red detectado, reintentando...');
+            // Si quieres reintentar:
+             setTimeout(() => this.startGame(), 3000);
+            return;
+        }
+
+        let popupError = new popup();
+        popupError.openPopup({
+            title: 'Error al iniciar el juego',
+            content: msg || 'Error desconocido',
+            color: 'red',
+            options: true
         });
 
-        launch.on('progress', (progress, size) => {
-            infoStarting.innerHTML = `Descargando ${((progress / size) * 100).toFixed(0)}%`
-            ipcRenderer.send('main-window-progress', { progress, size })
-            progressBar.value = progress;
-            progressBar.max = size;
-        });
+        if (configClient.launcher_config.closeLauncher == 'close-launcher') {
+            ipcRenderer.send("main-window-show");
+        }
 
-        launch.on('check', (progress, size) => {
-            infoStarting.innerHTML = `Verificación ${((progress / size) * 100).toFixed(0)}%`
-            ipcRenderer.send('main-window-progress', { progress, size })
-            progressBar.value = progress;
-            progressBar.max = size;
-        });
+        ipcRenderer.send('main-window-progress-reset');
+        infoStartingBOX.style.display = "none";
+        playInstanceBTN.style.display = "flex";
+        infoStarting.innerHTML = `Verificación`;
+        new logger(pkg.name, '#7289da');
+        console.error(err);
+    });
 
-        launch.on('estimated', (time) => {
-            let hours = Math.floor(time / 3600);
-            let minutes = Math.floor((time - hours * 3600) / 60);
-            let seconds = Math.floor(time - hours * 3600 - minutes * 60);
-            console.log(`${hours}h ${minutes}m ${seconds}s`);
-        })
-
-        launch.on('speed', (speed) => {
-            console.log(`${(speed / 1067008).toFixed(2)} Mb/s`)
-        })
-
-        launch.on('patch', patch => {
-            console.log(patch);
-            ipcRenderer.send('main-window-progress-load')
-            infoStarting.innerHTML = `Parche en progreso...`
-        });
-
-        launch.on('data', (e) => {
-            progressBar.style.display = "none"
-            if (configClient.launcher_config.closeLauncher == 'close-launcher') {
-                ipcRenderer.send("main-window-hide")
-            };
-            new logger('Minecraft', '#36b030');
-            ipcRenderer.send('main-window-progress-load')
-            infoStarting.innerHTML = `Empezando...`
-            console.log(e);
-        })
-
-        launch.on('close', code => {
-            if (configClient.launcher_config.closeLauncher == 'close-launcher') {
-                ipcRenderer.send("main-window-show")
-            };
-            ipcRenderer.send('main-window-progress-reset')
-            infoStartingBOX.style.display = "none"
-            playInstanceBTN.style.display = "flex"
-            infoStarting.innerHTML = `Verificación`
-            new logger(pkg.name, '#7289da');
-            console.log('Close');
-        });
-
-        launch.on('error', err => {
-
-            if (configClient.launcher_config.closeLauncher == 'close-launcher') {
-                ipcRenderer.send("main-window-show")
-            };
-            ipcRenderer.send('main-window-progress-reset')
-            infoStartingBOX.style.display = "none"
-            playInstanceBTN.style.display = "flex"
-            infoStarting.innerHTML = `Verificación`
-            new logger(pkg.name, '#7289da');
-            console.log(err);
-        });
     }
 
     getdate(e) {

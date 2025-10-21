@@ -1,7 +1,7 @@
 {
     "name": "OJOLAND-Launcher",
     "preductname": "OJOLAND Launcher",
-    "version": "4.1.8",
+    "version": "4.1.9",
     "description": "Lanzador oficial de OJOLAND",
     "main": "src/app.js",
     "author": {
@@ -16,7 +16,7 @@
         "start": "cross-env-shell NODE_ENV=dev electron .",
         "dev": "cross-env-shell DEV_TOOL=open nodemon --exec npm start",
         "build": "cross-env NODE_ENV=production node build.js --obf=true --build=platform",
-        "icon": "node build.js --icon=https://raw.githubusercontent.com/luuxis/Selvania-Launcher/master/src/assets/images/icon.png"
+        "icon": "node build.js --icon=https://raw.githubusercontent.com/REX-YT/Launcher_OJO/master/src/assets/images/icon.png"
     },
     "license": "Propietary",
     "nodemonConfig": {
@@ -27,7 +27,7 @@
         "dotenv": "^16.6.1",
         "electron-updater": "^6.1.4",
         "express": "^4.21.2",
-        "minecraft-java-core": "^3.8.1",
+        "minecraft-java-core": "^4.1.4",
         "node-bdd": "^2.0.3",
         "node-fetch": "^2.7.0",
         "node-mcstatus": "^1.2.1",
