@@ -502,132 +502,92 @@ class Home {
         }
     }
 
-    async startGame() {
-        let launch = new Launch()
-        let configClient = await this.db.readData('configClient')
-        let instance = await config.getInstanceList()
-        let authenticator = await this.db.readData('accounts', configClient.account_selected)
-        let options = instance.find(i => i.name == configClient.instance_selct)
+async startGame() {
+    let launch = new Launch();
+    const configClient = await this.db.readData('configClient');
+    const instance = await config.getInstanceList();
+    const authenticator = await this.db.readData('accounts', configClient.account_selected);
+    const options = instance.find(i => i.name == configClient.instance_selct);
 
-        let playInstanceBTN = document.querySelector('.play-instance')
-        let infoStartingBOX = document.querySelector('.info-starting-game')
-        let infoStarting = document.querySelector(".info-starting-game-text")
-        let progressBar = document.querySelector('.progress-bar')
+    const playInstanceBTN = document.querySelector('.play-instance');
+    const infoStartingBOX = document.querySelector('.info-starting-game');
+    const infoStarting = document.querySelector('.info-starting-game-text');
+    const progressBar = document.querySelector('.progress-bar');
 
-        let opt = {
-            url: options.url,
-            authenticator: authenticator,
-            timeout: 10000,
-            path: `${await appdata()}/${process.platform == 'darwin' ? this.config.dataDirectory : `.${this.config.dataDirectory}`}`,
-            instance: options.name,
-            version: options.loadder.minecraft_version,
-            detached: configClient.launcher_config.closeLauncher == "close-all" ? false : true,
-            downloadFileMultiple: configClient.launcher_config.download_multi,
-            intelEnabledMac: configClient.launcher_config.intelEnabledMac,
+    let lastProgress = { progress: 0, size: 0 };
 
-            loader: {
-                type: options.loadder.loadder_type,
-                build: options.loadder.loadder_version,
-                enable: options.loadder.loadder_type == 'none' ? false : true
-            },
+    const opt = {
+        url: options.url,
+        authenticator,
+        timeout: 15000,
+        path: `${await appdata()}/${process.platform == 'darwin' ? this.config.dataDirectory : `.${this.config.dataDirectory}`}`,
+        instance: options.name,
+        version: options.loadder.minecraft_version,
+        detached: configClient.launcher_config.closeLauncher !== "close-all",
+        downloadFileMultiple: configClient.launcher_config.download_multi,
+        intelEnabledMac: configClient.launcher_config.intelEnabledMac,
 
-            verify: options.verify,
+        loader: {
+            type: options.loadder.loadder_type,
+            build: options.loadder.loadder_version,
+            enable: options.loadder.loadder_type !== 'none'
+        },
 
-            ignored: [...options.ignored],
-
-            java: {
-                path: configClient.java_config.java_path,
-            },
-
-            JVM_ARGS:  options.jvm_args ? options.jvm_args : [],
-            GAME_ARGS: options.game_args ? options.game_args : [],
-
-            screen: {
-                width: configClient.game_config.screen_size.width,
-                height: configClient.game_config.screen_size.height
-            },
-
-            memory: {
-                min: `${configClient.java_config.java_memory.min * 1024}M`,
-                max: `${configClient.java_config.java_memory.max * 1024}M`
-            }
+        verify: options.verify,
+        ignored: [...options.ignored],
+        java: { path: configClient.java_config.java_path },
+        JVM_ARGS: options.jvm_args || [],
+        GAME_ARGS: options.game_args || [],
+        screen: {
+            width: configClient.game_config.screen_size.width,
+            height: configClient.game_config.screen_size.height
+        },
+        memory: {
+            min: `${configClient.java_config.java_memory.min * 1024}M`,
+            max: `${configClient.java_config.java_memory.max * 1024}M`
         }
+    };
 
-        launch.Launch(opt);
+    // --- Mostrar pantalla de progreso ---
+    playInstanceBTN.style.display = "none";
+    infoStartingBOX.style.display = "block";
+    progressBar.style.display = "";
+    progressBar.value = 0;
+    ipcRenderer.send('main-window-progress-load');
 
-        playInstanceBTN.style.display = "none"
-        infoStartingBOX.style.display = "block"
-        progressBar.style.display = "";
-        ipcRenderer.send('main-window-progress-load')
+    // --- VINCULAR EVENTOS ---
 
-      
-    // Progreso de descarga
     launch.on('progress', (progress, size) => {
         if (!size || size <= 0) return;
-        const percent = ((progress / size) * 100).toFixed(0);
+        const percent = Math.min(((progress / size) * 100).toFixed(0), 100);
+        lastProgress = { progress, size };
         infoStarting.innerHTML = `Descargando ${percent}%`;
         ipcRenderer.send('main-window-progress', { progress, size });
         progressBar.value = progress;
         progressBar.max = size;
     });
 
-    // Verificación de archivos
     launch.on('check', (progress, size) => {
         if (!size || size <= 0) return;
-        const percent = ((progress / size) * 100).toFixed(0);
+        const percent = Math.min(((progress / size) * 100).toFixed(0), 100);
         infoStarting.innerHTML = `Verificación ${percent}%`;
         ipcRenderer.send('main-window-progress', { progress, size });
         progressBar.value = progress;
         progressBar.max = size;
     });
 
-    // Tiempo estimado
-    launch.on('estimated', (time) => {
-        if (!isFinite(time) || time <= 0) return;
-        let hours = Math.floor(time / 3600);
-        let minutes = Math.floor((time % 3600) / 60);
-        let seconds = Math.floor(time % 60);
-        console.log(`[OJOLAND-Launcher]: ${hours}h ${minutes}m ${seconds}s`);
-    });
-
-    // Velocidad con limitador (una vez por segundo)
-    let lastSpeedLog = 0;
-    launch.on('speed', (speed) => {
-        const now = Date.now();
-        if (now - lastSpeedLog < 1000) return;
-        lastSpeedLog = now;
-        if (!isFinite(speed) || speed <= 0) return;
-        console.log(`[OJOLAND-Launcher]: ${(speed / 1067008).toFixed(2)} Mb/s`);
-    });
-
-    // Parches
-    launch.on('patch', patch => {
-        console.log(patch);
-        ipcRenderer.send('main-window-progress-load');
-        infoStarting.innerHTML = `Parche en progreso...`;
-    });
-
-    // Extracción
-    launch.on('extract', extract => {
-        ipcRenderer.send('main-window-progress-load');
-        console.log(extract);
-    });
-
-    // Cuando inicia el juego
     launch.on('data', (e) => {
         progressBar.style.display = "none";
-        if (configClient.launcher_config.closeLauncher == 'close-launcher') {
+        if (configClient.launcher_config.closeLauncher === 'close-launcher') {
             ipcRenderer.send("main-window-hide");
         }
         new logger('Minecraft', '#36b030');
-        ipcRenderer.send('main-window-progress-load');
         infoStarting.innerHTML = `Empezando...`;
         console.log(e);
     });
 
-    // Cuando se cierra el juego
-    launch.on('close', code => {
-        if (configClient.launcher_config.closeLauncher == 'close-launcher') {
+    launch.on('close', (code) => {
+        if (configClient.launcher_config.closeLauncher === 'close-launcher') {
             ipcRenderer.send("main-window-show");
         }
         ipcRenderer.send('main-window-progress-reset');
@@ -638,21 +598,31 @@ class Home {
         console.log('Close');
     });
 
-    // Manejo de errores
-    launch.on('error', err => {
-        // Filtrar errores comunes de red
+    // --- MANEJO DE ERRORES ---
+    launch.on('error', (err) => {
         const msg = err?.message || err?.error || '';
-        if (
+        const isNetworkError =
             msg.includes('ERR_CONNECTION_RESET') ||
             msg.includes('network error') ||
-            msg.includes('The user aborted a request')
-        ) {
-            console.warn('[OJOLAND-Launcher]: Problema de red detectado, reintentando...');
-            // Si quieres reintentar:
-             setTimeout(() => this.startGame(), 3000);
+            msg.includes('The user aborted a request') ||
+            msg.includes('ECONNRESET');
+
+        ipcRenderer.send('main-window-progress-reset');
+
+        if (isNetworkError) {
+            console.warn('[OJOLAND-Launcher]: Descarga interrumpida por red.');
+            infoStarting.innerHTML = `Descarga interrumpida. Pulsa "Iniciar" para reanudar.`;
+
+            // 🔹 Detener y limpiar UI
+            infoStartingBOX.style.display = "block";
+            playInstanceBTN.style.display = "flex";
+            progressBar.style.display = "none";
+
+            // No relanzamos automáticamente — dejamos que el usuario pulse "Iniciar"
             return;
         }
 
+        // 🔸 Otros errores críticos
         let popupError = new popup();
         popupError.openPopup({
             title: 'Error al iniciar el juego',
@@ -661,11 +631,10 @@ class Home {
             options: true
         });
 
-        if (configClient.launcher_config.closeLauncher == 'close-launcher') {
+        if (configClient.launcher_config.closeLauncher === 'close-launcher') {
             ipcRenderer.send("main-window-show");
         }
 
-        ipcRenderer.send('main-window-progress-reset');
         infoStartingBOX.style.display = "none";
         playInstanceBTN.style.display = "flex";
         infoStarting.innerHTML = `Verificación`;
@@ -673,7 +642,10 @@ class Home {
         console.error(err);
     });
 
-    }
+    // --- LANZAR EL PROCESO ---
+    launch.Launch(opt);
+}
+
 
     getdate(e) {
         let date = new Date(e)
